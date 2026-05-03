@@ -1,0 +1,4 @@
+/Users/sanugupta/trackier/AppBrew/apptrove-appbrew-sdk/android/app/.cxx/Debug/6c3u5k66/arm64-v8a/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir
+/Users/sanugupta/trackier/AppBrew/apptrove-appbrew-sdk/android/app/.cxx/Debug/6c3u5k66/arm64-v8a/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir
+/Users/sanugupta/trackier/AppBrew/apptrove-appbrew-sdk/android/app/.cxx/Debug/6c3u5k66/arm64-v8a/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/edit_cache.dir
+/Users/sanugupta/trackier/AppBrew/apptrove-appbrew-sdk/android/app/.cxx/Debug/6c3u5k66/arm64-v8a/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/rebuild_cache.dir

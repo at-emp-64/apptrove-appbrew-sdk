@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "RNThumbhashViewSpec_autolinked_build",
+		"source" : "/Users/sanugupta/trackier/AppBrew/apptrove-appbrew-sdk/node_modules/@luckypear/react-native-thumbhash/android/build/generated/source/codegen/jni"
+	}
+}

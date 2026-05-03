@@ -1,0 +1,12 @@
+{
+  "name": "apptrove-sdk",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "files": [
+    "src/"
+  ],
+  "peerDependencies": {
+    "@app-brew/brewery": ">=1.0.0",
+    "react-native-apptrove": "2.0.1"
+  }
+}

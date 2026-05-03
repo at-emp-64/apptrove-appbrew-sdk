@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "prefabPath": "/Users/sanugupta/.gradle/caches/modules-2/files-2.1/com.google.prefab/cli/2.1.0/aa32fec809c44fa531f01dcfb739b5b3304d3050/cli-2.1.0-all.jar",
+  "packages": [
+    "/Users/sanugupta/.gradle/caches/8.13/transforms/769b3a3fa190e58f15be42300a3592ef/transformed/react-android-0.81.0-debug/prefab",
+    "/Users/sanugupta/trackier/AppBrew/apptrove-appbrew-sdk/node_modules/react-native-reanimated/android/build/intermediates/prefab_package/debug/prefab",
+    "/Users/sanugupta/trackier/AppBrew/apptrove-appbrew-sdk/node_modules/react-native-worklets/android/build/intermediates/prefab_package/debug/prefab",
+    "/Users/sanugupta/.gradle/caches/8.13/transforms/c2012a073284d34c34a2e49c32788707/transformed/hermes-android-0.81.0-debug/prefab",
+    "/Users/sanugupta/.gradle/caches/8.13/transforms/93df8bb2ba80a44e1b3f6f615be779e4/transformed/fbjni-0.7.0/prefab"
+  ]
+}

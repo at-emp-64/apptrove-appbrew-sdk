@@ -1,0 +1,105 @@
+diff --git a/android/src/main/java/com/thumbhash/ThumbhashViewManager.kt b/android/src/main/java/com/thumbhash/ThumbhashViewManager.kt
+index 5f9b2af33077c3529681a79132d8d39420035baf..bfc9fea2680b70d3a329966b4d81f9630c9d85fb 100644
+--- a/android/src/main/java/com/thumbhash/ThumbhashViewManager.kt
++++ b/android/src/main/java/com/thumbhash/ThumbhashViewManager.kt
+@@ -89,7 +89,7 @@ class ThumbhashViewManager : ThumbhashViewManagerSpec<ThumbhashImageView>() {
+       .put(LoadErrorEvent.EVENT_NAME, MapBuilder.of("registrationName", "onLoadError"))
+       .put(LoadStartEvent.EVENT_NAME, MapBuilder.of("registrationName", "onLoadStart"))
+       .put(LoadEndEvent.EVENT_NAME, MapBuilder.of("registrationName", "onLoadEnd"))
+-      .build()
++      .build().toMutableMap()
+   }
+ 
+   override fun getName() = REACT_CLASS
+diff --git a/android/src/newarch/NativeThumbhashModuleSpec.kt b/android/src/newarch/NativeThumbhashModuleSpec.kt
+deleted file mode 100644
+index 42deefb74c00e7f12356e401e7f9ef8102401a3f..0000000000000000000000000000000000000000
+diff --git a/ios/ThumbhashModule.mm b/ios/ThumbhashModule.mm
+index 79f76cdf5c65a9b4a214b54e714f22ea436b118a..52b48f01f6072bdeadbef79963540d6fc8a4e346 100644
+--- a/ios/ThumbhashModule.mm
++++ b/ios/ThumbhashModule.mm
+@@ -12,20 +12,13 @@
+ #import "react_native_thumbhash-Swift.h"
+ #endif
+ 
+-#ifdef RCT_NEW_ARCH_ENABLED
+-using namespace facebook::react;
+-
+-@interface ThumbhashModule () <NativeThumbhashModuleSpec>
+-@end
+-#endif
+-
+ @interface ThumbhashModule ()
+ 
+ @property (nonatomic, strong) ThumbhashModuleImpl *impl;
+ 
+ @end
+ 
+-@implementation ThumbhashModule 
++@implementation ThumbhashModule
+ RCT_EXPORT_MODULE()
+ 
+ @synthesize moduleRegistry = _moduleRegistry;
+@@ -49,13 +42,4 @@ RCT_EXPORT_METHOD(encode
+   return _impl;
+ }
+ 
+-// Don't compile this code when we build for the old architecture.
+-#ifdef RCT_NEW_ARCH_ENABLED
+-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
+-    (const facebook::react::ObjCTurboModule::InitParams &)params
+-{
+-    return std::make_shared<facebook::react::NativeTestSpecJSI>(params);
+-}
+-#endif
+-
+ @end
+diff --git a/lib/commonjs/NativeThumbhashView.js b/lib/commonjs/NativeThumbhashView.js
+index af36af41fabc4bed6c4a2be436e05caf2d551b21..2bc0741cf2a3080b7194e3003518a8b031671853 100644
+--- a/lib/commonjs/NativeThumbhashView.js
++++ b/lib/commonjs/NativeThumbhashView.js
+@@ -4,7 +4,6 @@ Object.defineProperty(exports, "__esModule", {
+   value: true
+ });
+ exports.default = void 0;
+-var _codegenNativeComponent = _interopRequireDefault(require("react-native/Libraries/Utilities/codegenNativeComponent"));
+-function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
+-var _default = exports.default = (0, _codegenNativeComponent.default)('ThumbhashView');
++var _reactNative = require("react-native");
++var _default = exports.default = (0, _reactNative.requireNativeComponent)('ThumbhashView');
+ //# sourceMappingURL=NativeThumbhashView.js.map
+\ No newline at end of file
+diff --git a/lib/module/NativeThumbhashView.js b/lib/module/NativeThumbhashView.js
+index 074c2705f9bcb36325eae40b45acded8a42d1612..63df5a143bf9b77ee3ba834fb4617c2a6f425482 100644
+--- a/lib/module/NativeThumbhashView.js
++++ b/lib/module/NativeThumbhashView.js
+@@ -1,3 +1,3 @@
+-import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNativeComponent';
+-export default codegenNativeComponent('ThumbhashView');
++import { requireNativeComponent } from 'react-native';
++export default requireNativeComponent('ThumbhashView');
+ //# sourceMappingURL=NativeThumbhashView.js.map
+\ No newline at end of file
+diff --git a/package.json b/package.json
+index 24a51ef3f8f5f8f048b1bff040b7db9deaa9309b..c1018ea5b0265b568226b5824cf340efcd200405 100644
+--- a/package.json
++++ b/package.json
+@@ -11,7 +11,8 @@
+       "types": "./lib/typescript/src/index.d.ts",
+       "import": "./lib/module/index.js",
+       "require": "./lib/commonjs/index.js"
+-    }
++    },
++    "./package.json": "./package.json"
+   },
+   "files": [
+     "src",
+@@ -182,7 +183,7 @@
+   },
+   "codegenConfig": {
+     "name": "RNThumbhashViewSpec",
+-    "type": "components",
++    "type": "all",
+     "jsSrcsDir": "src"
+   },
+   "create-react-native-library": {
