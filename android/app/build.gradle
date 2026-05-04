@@ -110,6 +110,17 @@ android {
     }
 }
 
+configurations.all {
+    resolutionStrategy {
+        // Apptrove android-sdk pulls work-runtime-ktx:2.7.1, while
+        // other deps pull work-runtime:2.8.0. The KTX APIs were
+        // merged into work-runtime in 2.7+, so mismatched versions
+        // cause Duplicate class errors. Pin both to the same line.
+        force 'androidx.work:work-runtime:2.8.0'
+        force 'androidx.work:work-runtime-ktx:2.8.0'
+    }
+}
+
 dependencies {
 
 
