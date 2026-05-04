@@ -1,1 +1,0 @@
-/Users/sanugupta/trackier/AppBrew/apptrove-appbrew-sdk/android/app/build/intermediates/cxx/Debug/6c3u5k66/obj/x86_64
