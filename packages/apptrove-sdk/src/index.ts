@@ -9,3 +9,5 @@
  */
 
 export const INTEGRATION_NAME = 'apptrove-sdk'
+
+export { ApptroveTracker } from './appTroveTrackers'
