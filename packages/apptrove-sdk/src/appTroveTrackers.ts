@@ -97,7 +97,7 @@
                 break;
 
             default:
-                console.log('⚠️ Unhandled event:', normalizedEvent);
+                console.log('⚠️ Unhandled event:', event);
                 break;
             }
         }
