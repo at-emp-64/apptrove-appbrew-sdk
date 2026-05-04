@@ -27,3 +27,7 @@ pnpm install
 ```
 
 Then follow the guides in [docs/](./docs/index.md).
+
+## Integrations in this repo
+
+- **[apptrove-sdk](./packages/apptrove-sdk/README.md)** — Apptrove analytics tracker. See its README for install steps in any AppBrew RN app consumer.
