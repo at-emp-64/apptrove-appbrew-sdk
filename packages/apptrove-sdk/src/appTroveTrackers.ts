@@ -110,15 +110,86 @@
             });
         }
 
-        // ✅ Single reusable Apptrove event sender
-        track(eventId: string, payload?: AnalyticsPayload) {
+        // // ✅ Single reusable Apptrove event sender
+        // track(eventId: string, payload?: AnalyticsPayload) {
+        //     try {
+        //     var apptroveEvent = new ApptroveEvent(eventId); // Built-in event
+        //     apptroveEvent.ev = payload; // Custom payload
+        //     ApptroveSDK.trackEvent(apptroveEvent);
+
+        //     } catch (error) {
+        //     console.error('❌ Apptrove Event Error:', error);
+        //     }
+        // }
+
+        track(eventId: string, payload?: any) {
             try {
-            var apptroveEvent = new ApptroveEvent(eventId); // Built-in event
-            apptroveEvent.ev = payload; // Custom payload
-            ApptroveSDK.trackEvent(apptroveEvent);
+                if (!eventId) {
+                console.warn("⚠️ Event ID is missing");
+                return;
+                }
+
+                const apptroveEvent = new ApptroveEvent(eventId);
+
+                // 🔹 Helpers
+                const getString = (val: any) =>
+                val !== undefined && val !== null ? String(val) : "";
+
+                const getNumber = (val: any) => {
+                const num = Number(val);
+                return isNaN(num) ? 0 : num;
+                };
+
+                if (payload && typeof payload === "object") {
+
+                // 🔹 Ensure items array
+                let items = [];
+                if (Array.isArray(payload.items)) {
+                    items = payload.items;
+                }
+
+                // 🔹 Revenue + Currency (IMPORTANT)
+                const revenue = getNumber(payload.value || payload.sub_total);
+                const currency = getString(payload.currency || "USD");
+
+                apptroveEvent.revenue = revenue;
+                apptroveEvent.currency = currency;
+
+                // 🔹 Core fields
+                apptroveEvent.orderId = getString(payload.checkout_token);
+                apptroveEvent.discount = getNumber(payload.discount);
+
+                // 🔹 Item mapping (safe)
+                if (items.length > 0 && typeof items[0] === "object") {
+                    const item = items[0];
+
+                    apptroveEvent.productId = getString(item.item_id);
+                    apptroveEvent.param1 = getString(item.item_name);
+                    apptroveEvent.param2 = getString(item.item_size);
+                    apptroveEvent.param3 = getString(item.item_brand);
+                    apptroveEvent.param4 = getString(item.item_color);
+                    apptroveEvent.param5 = getString(item.sku);
+                }
+
+                // 🔹 Attach full payload (always)
+                apptroveEvent.ev = payload;
+
+                // 🔹 Optional tracking values
+                apptroveEvent.setEventValue("items_count", items.length);
+                apptroveEvent.setEventValue("source", "app");
+
+                // 🔹 (Optional) Explicit revenue event style mapping
+                // Useful if backend treats revenue events differently
+                if (revenue > 0) {
+                    apptroveEvent.setEventValue("is_revenue_event", true);
+                }
+                }
+
+                // 🔹 Fire event
+                ApptroveSDK.trackEvent(apptroveEvent);
 
             } catch (error) {
-            console.error('❌ Apptrove Event Error:', error);
+                console.error("❌ Apptrove Event Error:", error);
             }
         }
     }
