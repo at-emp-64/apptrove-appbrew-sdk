@@ -9,7 +9,7 @@
         async initTracker(config?: AppConfig) {
             if (Platform.OS === 'android' || Platform.OS === 'ios') {
             try {
-                console.log('🚀 Initializing Trackier SDK');
+                console.log('🚀 Initializing Apptrove SDK');
 
                 var apptroveConfig = new ApptroveConfig(
                 "ec4a87eb-3bd9-4a4a-8c8a-e8534507789e", //libas SDK Keys
