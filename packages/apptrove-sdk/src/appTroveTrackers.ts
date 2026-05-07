@@ -12,10 +12,16 @@
                 console.log('🚀 Initializing Trackier SDK');
 
                 var apptroveConfig = new ApptroveConfig(
-                "ee9f21fb-5848-4ed9-8d9c-e4093e6d220c",
+                "ec4a87eb-3bd9-4a4a-8c8a-e8534507789e", //libas SDK Keys
                 "development" // ✅ fixed typo
                 );
-                apptroveConfig.setAppSecret("setSecretId","setSecretKey"); // Set app secret for enhanced security
+                //apptroveConfig.setAppSecret("setSecretId","setSecretKey"); // Set app secret Id and Secret Key here for enhanced security 
+
+                apptroveConfig.setDeferredDeeplinkCallbackListener(function(deepLinkData) {
+                    console.log("Deferred Deeplink Callback received");
+                    console.log("DeepLink Data: " + JSON.stringify(deepLinkData));
+                    console.log("URL: " + deepLinkData.url);
+                });
 
                 ApptroveSDK.initialize(apptroveConfig);
 
@@ -32,68 +38,68 @@
 
             switch (event) {
             case 'add_to_cart':
-                this.track('nr8Ri53bVe', payload);
+                this.track('Fy4uC1_FlN', payload); // nr8Ri53bVe = add_to_cart (Custom)
                 break;
 
             case 'remove_from_cart':
-                this.track('cOUkbYcmPO', payload);
+                this.track('zjzhYZNNTE', payload); // cOUkbYcmPO = remove_from_cart (Custom)
                 break;
 
             case 'view_item':
-                console.log('📊 Event: case---',"view_item")
-                this.track('rqU8Fj2eH2', payload);
+                console.log('📊 Event: case---',"view_item") //rqU8Fj2eH2 = view_item (Custom)
+                this.track('XLdSodqgld', payload); // 
                 break;
 
             case 'view_item_list':
-                this.track('KGItNYWJwH', payload);
+                this.track('xLo5iOmEUm', payload); // KGItNYWJwH = view_item_list (Custom)
                 break;
 
             case 'view_cart':
-                this.track('drsYVcgcAh', payload);
+                this.track('drsYVcgcAh', payload); // drsYVcgcAh = view_cart (Custom)
                 break;
 
             case 'begin_checkout':
-                this.track('34mjlWJaHL', payload);
+                this.track('rbJmUiy8vZ', payload); // HP1zW85IFo = begin_checkout (Custom)
                 break;
 
             case 'purchase':
-                this.track('jpk3n2mi68', payload);
+                this.track('Q4YsqBKnzZ', payload); // jpk3n2mi68 = purchase (Custom)
                 break;
 
             case 'search':
-                this.track('mH6sqU7t6u', payload);
+                this.track('mH6sqU7t6u', payload); // mH6sqU7t6u = search (Built-in)
                 break;
 
             case 'screen_view':
-                this.track('mHJoo2USkp', payload);
+                this.track('0zrztVO54t', payload); // mHJoo2USkp = screen_view (custom)
                 break;
 
             case 'add_to_wishlist':
-                this.track('ePL2CANIYV', payload);
+                this.track('AOisVC76YG', payload); // ePL2CANIYV = add_to_wishlist (Custom)
                 break;
 
             case 'remove_from_wishlist':
-                this.track('u9zlOUxIuS', payload);
+                this.track('XyrCtDCVFg', payload); // u9zlOUxIuS = remove_from_wishlist (Custom)
                 break;
 
             case 'login':
-                this.track('o91gt1Q0PK', payload);
+                this.track('o91gt1Q0PK', payload); // o91gt1Q0PK = login (Custom)
                 break;
 
             case 'signup':
-                this.track('Fs2RFODrwU', payload);
+                this.track('8ASKXJ1vWO', payload); // Fs2RFODrwU = signup (Custom)
                 break;
 
             case 'select_item':
-                this.track('aujWzJaEcv', payload);
+                this.track('5f0BML6LDg', payload); // aujWzJaEcv = select_item (Custom)
                 break;
 
             case 'apply_coupon':
-                this.track('CMfNLYL3CO', payload);
+                this.track('AR1argJ9TD', payload); // CMfNLYL3CO = apply_coupon (Custom)
                 break;
 
             case 'remove_coupon':
-                this.track('rzXoWvrLQZ', payload);
+                this.track('tpJ8NfA1Iv', payload); // rzXoWvrLQZ = remove_coupon (Custom)
                 break;
 
             default:
@@ -122,6 +128,24 @@
         //     }
         // }
 
+        // <!-- ✅ FCM token function for uninstall Tracking -->
+
+        sendFCMToken(fcmToken: string) { 
+            try {
+                if (!fcmToken || typeof fcmToken !== "string") {
+                console.warn("⚠️ Invalid FCM token");
+                return;
+                }
+
+                ApptroveSDK.sendFcmToken(fcmToken); 
+
+            } catch (error) {
+                console.error('❌ Apptrove FCM Token Error:', error);
+            }
+        }
+
+
+
         track(eventId: string, payload?: any) {
             try {
                 if (!eventId) {
@@ -149,11 +173,23 @@
                 }
 
                 // 🔹 Revenue + Currency (IMPORTANT)
-                const revenue = getNumber(payload.value || payload.sub_total);
-                const currency = getString(payload.currency || "USD");
+                
+                // const revenue = getNumber(payload.value || payload.sub_total);
+                // const currency = getString(payload.currency || "USD");
 
-                apptroveEvent.revenue = revenue;
-                apptroveEvent.currency = currency;
+                // apptroveEvent.revenue = revenue;
+                // apptroveEvent.currency = currency;
+
+                let revenue = 0;
+
+                if (eventId === "Q4YsqBKnzZ") {
+                    revenue = getNumber(payload.value || payload.sub_total);
+
+                    const currency = getString(payload.currency || "INR");
+
+                    apptroveEvent.revenue = revenue;
+                    apptroveEvent.currency = currency; 
+                }
 
                 // 🔹 Core fields
                 apptroveEvent.orderId = getString(payload.checkout_token);
