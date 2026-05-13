@@ -25,6 +25,9 @@ importers:
       '@app-brew/appbrew':
         specifier: 1.0.0
         version: 1.0.0(4c7759121221c24f58b61fb6e604c7e2)
+      '@app-brew/apptrove-sdk':
+        specifier: workspace:*
+        version: link:packages/apptrove-sdk
       '@app-brew/brewery':
         specifier: 1.0.0
         version: 1.0.0(6aee35dbdaf89653a2c3b76d655ff0f6)
@@ -142,9 +145,6 @@ importers:
       '@urql/exchange-graphcache':
         specifier: ^4.4.3
         version: 4.4.3(graphql@16.13.2)
-      apptrove-sdk:
-        specifier: workspace:*
-        version: link:packages/apptrove-sdk
       axios:
         specifier: ^1.8.3
         version: 1.15.0
