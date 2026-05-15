@@ -64,12 +64,11 @@ jobs:
         if: steps.parse.outputs.match == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # npm Trusted Publisher OIDC requires Node >= 22.14.0 and npm >= 11.5.1.
+          # Node 24 ships npm 11.x, satisfying both.
+          # https://docs.npmjs.com/trusted-publishers
+          node-version: 24
           registry-url: https://registry.npmjs.org
-
-      - name: Setup pnpm
-        if: steps.parse.outputs.match == 'true'
-        uses: pnpm/action-setup@v4
 
       - name: Verify package.json version matches commit
         if: steps.parse.outputs.match == 'true'
@@ -98,21 +97,31 @@ jobs:
 
       - name: Publish to npm (OIDC)
         if: steps.parse.outputs.match == 'true'
+        working-directory: packages/apptrove-sdk
         env:
           VERSION: ${{ steps.parse.outputs.version }}
         run: |
           set -euo pipefail
-          # Prereleases like 1.0.0-beta.3 publish under the prerelease
-          # identifier as the dist-tag (e.g. "beta") so `latest` never
-          # accidentally moves to a non-stable version. Stable versions
-          # publish with the default `latest` tag.
+          # npm CLI 11.5.1+ auto-detects OIDC env vars (set by `id-token: write`)
+          # and exchanges them with the npm Trusted Publisher binding — no token
+          # in env.
+          #
+          # Not passing --provenance: provenance attestations require all of
+          # OIDC + public repo + public package (npm docs / "trusted publishers").
+          # this package is `access: restricted` (private), so provenance is
+          # ineligible. with OIDC trusted publishing, provenance is generated
+          # automatically when eligible — the explicit flag would just error or
+          # be ignored for a private package.
+          #
+          # Prereleases publish under the prerelease identifier as the dist-tag
+          # so `latest` never moves to a non-stable version.
           if [[ "$VERSION" == *-* ]]; then
             PREID="${VERSION#*-}"     # strip up to and including the first '-'
             PREID="${PREID%%.*}"      # strip from the first '.' onward
             echo "Prerelease detected, publishing under dist-tag: $PREID"
-            pnpm --filter @app-brew/apptrove-sdk publish --access restricted --provenance --no-git-checks --tag "$PREID"
+            npm publish --access restricted --tag "$PREID"
           else
-            pnpm --filter @app-brew/apptrove-sdk publish --access restricted --provenance --no-git-checks
+            npm publish --access restricted
           fi
 
       - name: Tag the release commit
