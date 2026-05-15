@@ -1,0 +1,135 @@
+name: Release (prepare PR)
+
+# Manually triggered by the team to start a release of @app-brew/apptrove-sdk.
+# Bumps the package's version on a release branch and opens a PR titled
+#   release(apptrove-sdk): v<new-version>
+# Merging that PR triggers publish.yml, which publishes to npm via OIDC and
+# tags the merge commit as @app-brew/apptrove-sdk@<new-version>.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version bump
+        type: choice
+        required: true
+        options:
+          - patch
+          - minor
+          - major
+          - prerelease
+      prerelease_id:
+        description: Prerelease identifier (only used when bump=prerelease, e.g. beta, rc)
+        type: string
+        required: false
+        default: beta
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release-apptrove-sdk
+  cancel-in-progress: false
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Compute new version
+        id: bump
+        working-directory: packages/apptrove-sdk
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.bump }}" = "prerelease" ]; then
+            npm version prerelease --preid="${{ inputs.prerelease_id }}" --no-git-tag-version
+          else
+            npm version "${{ inputs.bump }}" --no-git-tag-version
+          fi
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Bumped @app-brew/apptrove-sdk to $NEW_VERSION"
+
+      - name: Create release branch and commit
+        id: branch
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          set -euo pipefail
+          BRANCH="release/apptrove-sdk-v${VERSION}"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          git checkout -b "$BRANCH"
+          git add packages/apptrove-sdk/package.json
+          git commit -m "release(apptrove-sdk): v${VERSION}"
+          git push origin "$BRANCH"
+
+      - name: Open release PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.bump.outputs.version }}
+          BRANCH: ${{ steps.branch.outputs.branch }}
+        run: |
+          set -euo pipefail
+
+          PREV_TAG=$(git tag -l "@app-brew/apptrove-sdk@*" --sort=-v:refname | head -n1 || true)
+          if [ -n "$PREV_TAG" ]; then
+            CHANGES=$(git log "${PREV_TAG}..HEAD" --pretty=format:'- %s (%h)' -- packages/apptrove-sdk || true)
+            RANGE_NOTE="Changes in \`packages/apptrove-sdk\` since \`${PREV_TAG}\`:"
+          else
+            CHANGES=$(git log HEAD --pretty=format:'- %s (%h)' -- packages/apptrove-sdk || true)
+            RANGE_NOTE="First release of \`@app-brew/apptrove-sdk\`. Changes in \`packages/apptrove-sdk\`:"
+          fi
+          if [ -z "$CHANGES" ]; then
+            CHANGES="_(no commits touched packages/apptrove-sdk since the last release)_"
+          fi
+
+          BODY=$(cat <<EOF
+## Release \`@app-brew/apptrove-sdk@${VERSION}\`
+
+Merging this PR triggers \`.github/workflows/publish.yml\`, which will:
+
+1. Publish \`@app-brew/apptrove-sdk@${VERSION}\` to npm via OIDC (no token).
+2. Create and push the git tag \`@app-brew/apptrove-sdk@${VERSION}\` pointing at this PR's merge commit.
+3. Create a GitHub Release for that tag.
+
+### How to merge
+
+- **Use "Squash and merge"** so the merge commit on \`main\` keeps the title \`release(apptrove-sdk): v${VERSION}\`. The publish workflow keys off that exact commit-message format — if you rebase-merge or rename the squash commit, publish will not trigger.
+- Do not push more commits to this branch. If something needs to change, close this PR and re-run the **Release (prepare PR)** workflow.
+
+### ${RANGE_NOTE}
+
+${CHANGES}
+EOF
+)
+
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "release(apptrove-sdk): v${VERSION}" \
+            --body "$BODY" \
+            --label release

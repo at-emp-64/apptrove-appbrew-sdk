@@ -1,4 +1,4 @@
-# apptrove-sdk
+# @app-brew/apptrove-sdk
 
 Apptrove analytics tracker for AppBrew-powered React Native apps.
 
@@ -14,7 +14,7 @@ The SDK has two peer dependencies that the host app must install alongside it:
 - `react-native-apptrove 2.0.1` — the native module that does the actual work.
 
 ```bash
-pnpm add apptrove-sdk react-native-apptrove
+pnpm add @app-brew/apptrove-sdk react-native-apptrove
 cd ios && bundle exec pod install && cd ..
 ```
 
@@ -51,7 +51,7 @@ In your app's analytics initialization (typically `App.tsx`, where you call `Ana
 
 ```ts
 import { AnalyticsProvider } from '@gauntlet/analytics'
-import { ApptroveTracker } from 'apptrove-sdk'
+import { ApptroveTracker } from '@app-brew/apptrove-sdk'
 
 AnalyticsProvider.getInstance().addTracker(new ApptroveTracker())
 ```

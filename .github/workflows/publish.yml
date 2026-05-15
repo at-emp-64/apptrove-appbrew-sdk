@@ -1,0 +1,149 @@
+name: Publish
+
+# Auto-triggered when a release PR (opened by release.yml) is merged into main.
+# The contract is the merge commit's title: `release(apptrove-sdk): v<version>`.
+# If the head commit on a push to main doesn't match, this workflow no-ops.
+#
+# On match, this workflow:
+#   1. Verifies packages/apptrove-sdk/package.json version equals the parsed version.
+#   2. Verifies the version isn't already published to npm.
+#   3. Publishes @app-brew/apptrove-sdk@<version> to npm via OIDC.
+#   4. Tags the merge commit as @app-brew/apptrove-sdk@<version> and pushes.
+#   5. Creates a GitHub Release for that tag.
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  id-token: write
+  pull-requests: read
+
+concurrency:
+  group: publish-apptrove-sdk
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm-publish
+
+    steps:
+      - name: Parse release commit message
+        id: parse
+        env:
+          MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          set -euo pipefail
+          # Match only the first line of the commit message.
+          FIRST_LINE=$(printf '%s' "$MESSAGE" | head -n1)
+          if [[ "$FIRST_LINE" =~ ^release\(apptrove-sdk\):\ v(.+)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+            echo "match=true" >> "$GITHUB_OUTPUT"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            echo "Detected release commit: @app-brew/apptrove-sdk@$VERSION"
+          else
+            echo "match=false" >> "$GITHUB_OUTPUT"
+            echo "Head commit is not a release commit. Skipping publish."
+            echo "First line was: $FIRST_LINE"
+          fi
+
+      - name: Checkout release commit
+        if: steps.parse.outputs.match == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Setup Node
+        if: steps.parse.outputs.match == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Setup pnpm
+        if: steps.parse.outputs.match == 'true'
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        if: steps.parse.outputs.match == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify package.json version matches commit
+        if: steps.parse.outputs.match == 'true'
+        env:
+          EXPECTED: ${{ steps.parse.outputs.version }}
+        run: |
+          set -euo pipefail
+          ACTUAL=$(node -p "require('./packages/apptrove-sdk/package.json').version")
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "::error::package.json version ($ACTUAL) does not match release commit version ($EXPECTED). Refusing to publish."
+            exit 1
+          fi
+          echo "Version check passed: $ACTUAL"
+
+      - name: Verify version not already published
+        if: steps.parse.outputs.match == 'true'
+        env:
+          VERSION: ${{ steps.parse.outputs.version }}
+        run: |
+          set -euo pipefail
+          if npm view "@app-brew/apptrove-sdk@${VERSION}" version --silent >/dev/null 2>&1; then
+            echo "::error::@app-brew/apptrove-sdk@${VERSION} is already published on npm. Bump the version and try again."
+            exit 1
+          fi
+          echo "Version ${VERSION} is not yet published. Proceeding."
+
+      - name: Publish to npm (OIDC)
+        if: steps.parse.outputs.match == 'true'
+        run: pnpm --filter @app-brew/apptrove-sdk publish --access restricted --provenance --no-git-checks
+
+      - name: Tag the release commit
+        if: steps.parse.outputs.match == 'true'
+        env:
+          VERSION: ${{ steps.parse.outputs.version }}
+        run: |
+          set -euo pipefail
+          TAG="@app-brew/apptrove-sdk@${VERSION}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+      - name: Create GitHub Release
+        if: steps.parse.outputs.match == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.parse.outputs.version }}
+        run: |
+          set -euo pipefail
+          TAG="@app-brew/apptrove-sdk@${VERSION}"
+
+          # Mark as prerelease if version contains a hyphen (semver prerelease suffix).
+          PRERELEASE_FLAG=""
+          if [[ "$VERSION" == *-* ]]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+
+          # Pull the latest tag matching our scope/name from before this one to scope the changelog.
+          PREV_TAG=$(git tag -l "@app-brew/apptrove-sdk@*" --sort=-v:refname | grep -v "^${TAG}$" | head -n1 || true)
+          if [ -n "$PREV_TAG" ]; then
+            NOTES=$(git log "${PREV_TAG}..${TAG}" --pretty=format:'- %s (%h)' -- packages/apptrove-sdk || true)
+            HEADER="Changes since \`${PREV_TAG}\`:"
+          else
+            NOTES=$(git log "${TAG}" --pretty=format:'- %s (%h)' -- packages/apptrove-sdk || true)
+            HEADER="First release of \`@app-brew/apptrove-sdk\`."
+          fi
+          if [ -z "$NOTES" ]; then
+            NOTES="_(no commits touched packages/apptrove-sdk in this range)_"
+          fi
+
+          BODY=$(printf '%s\n\n%s\n\nPublished to npm: https://www.npmjs.com/package/@app-brew/apptrove-sdk/v/%s\n' "$HEADER" "$NOTES" "$VERSION")
+
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes "$BODY" \
+            $PRERELEASE_FLAG

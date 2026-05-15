@@ -1,10 +1,25 @@
 {
-  "name": "apptrove-sdk",
-  "version": "1.0.0",
+  "name": "@app-brew/apptrove-sdk",
+  "version": "1.0.0-beta.0",
   "main": "src/index.ts",
   "files": [
     "src/"
   ],
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://registry.npmjs.org/",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/at-emp-64/apptrove-appbrew-sdk.git",
+    "directory": "packages/apptrove-sdk"
+  },
+  "homepage": "https://github.com/at-emp-64/apptrove-appbrew-sdk/tree/main/packages/apptrove-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/at-emp-64/apptrove-appbrew-sdk/issues"
+  },
+  "license": "UNLICENSED",
   "peerDependencies": {
     "@app-brew/brewery": ">=1.0.0",
     "react-native-apptrove": "2.0.1"

@@ -31,7 +31,7 @@ import { Platform } from 'react-native'
 import { FacebookTracker } from '@gauntlet/integrations/facebook'
 import { registerContainers } from './register-containers'
 import { FirebasePush } from '@gauntlet/integrations/firebase-push'
-import { ApptroveTracker } from 'apptrove-sdk'
+import { ApptroveTracker } from '@app-brew/apptrove-sdk'
 
 const EnvConfig = Config.getConstants()
 
