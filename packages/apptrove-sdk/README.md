@@ -70,7 +70,7 @@ Expected shape:
 integrations: {
   apptrove: {
     apiKey: string                              // required — your Apptrove SDK key
-    environment?: 'development' | 'production'  // optional, defaults to 'development'
+    environment?: 'testing' | 'development' | 'production'  // optional, defaults to 'development'
     appSecret?: {                               // optional, enables enhanced security
       secretId: string
       secretKey: string
