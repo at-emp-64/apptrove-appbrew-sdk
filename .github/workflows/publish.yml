@@ -99,7 +99,22 @@ jobs:
 
       - name: Publish to npm (OIDC)
         if: steps.parse.outputs.match == 'true'
-        run: pnpm --filter @app-brew/apptrove-sdk publish --access restricted --provenance --no-git-checks
+        env:
+          VERSION: ${{ steps.parse.outputs.version }}
+        run: |
+          set -euo pipefail
+          # Prereleases like 1.0.0-beta.3 publish under the prerelease
+          # identifier as the dist-tag (e.g. "beta") so `latest` never
+          # accidentally moves to a non-stable version. Stable versions
+          # publish with the default `latest` tag.
+          if [[ "$VERSION" == *-* ]]; then
+            PREID="${VERSION#*-}"     # strip up to and including the first '-'
+            PREID="${PREID%%.*}"      # strip from the first '.' onward
+            echo "Prerelease detected, publishing under dist-tag: $PREID"
+            pnpm --filter @app-brew/apptrove-sdk publish --access restricted --provenance --no-git-checks --tag "$PREID"
+          else
+            pnpm --filter @app-brew/apptrove-sdk publish --access restricted --provenance --no-git-checks
+          fi
 
       - name: Tag the release commit
         if: steps.parse.outputs.match == 'true'
