@@ -1,34 +1,58 @@
-    //import { TrackierConfig, TrackierSDK, TrackierEvent } from 'react-native-trackier';
     import { ApptroveConfig, ApptroveSDK, ApptroveEvent } from 'react-native-apptrove';
     import { Platform } from 'react-native';
     import { AnalyticsTrackerV2 } from '@gauntlet/analytics'
-    import { AnalyticsEvent, AnalyticsPayload, AppConfig } from '@gauntlet/types'
+    import { AnalyticsEvent, AnalyticsPayload, AppConfig, IntegrationsConfig } from '@gauntlet/types'
+
+    export type ApptroveEnvironment = 'development' | 'production'
+
+    export interface ApptroveIntegrationConfig {
+        apiKey: string
+        environment?: ApptroveEnvironment
+        appSecret?: {
+            secretId: string
+            secretKey: string
+        }
+    }
+
+    function isApptroveConfig(
+        config: IntegrationsConfig
+    ): config is IntegrationsConfig & { apptrove: ApptroveIntegrationConfig } {
+        const candidate = (config as IntegrationsConfig & { apptrove?: ApptroveIntegrationConfig }).apptrove
+        return Boolean(candidate && typeof candidate === 'object' && typeof candidate.apiKey === 'string' && candidate.apiKey.length > 0)
+    }
 
     export class ApptroveTracker extends AnalyticsTrackerV2 {
 
         async initTracker(config?: AppConfig) {
-            if (Platform.OS === 'android' || Platform.OS === 'ios') {
-            try {
-                console.log('🚀 Initializing Apptrove SDK');
+            if (Platform.OS !== 'android' && Platform.OS !== 'ios') return
 
-                var apptroveConfig = new ApptroveConfig(
-                "ec4a87eb-3bd9-4a4a-8c8a-e8534507789e", //libas SDK Keys
-                "development" // ✅ fixed typo
-                );
-                //apptroveConfig.setAppSecret("setSecretId","setSecretKey"); // Set app secret Id and Secret Key here for enhanced security 
+            const integrations = config?.integrations
+            if (!integrations || !isApptroveConfig(integrations)) {
+                throw new Error('[apptrove-sdk] integrations.apptrove.apiKey is missing from AppConfig — configure it on the AppBrew dashboard.')
+            }
+
+            const { apiKey, environment = 'development', appSecret } = integrations.apptrove
+
+            try {
+                console.log('🚀 Initializing Apptrove SDK', { environment })
+
+                const apptroveConfig = new ApptroveConfig(apiKey, environment)
+
+                if (appSecret) {
+                    apptroveConfig.setAppSecret(appSecret.secretId, appSecret.secretKey)
+                }
 
                 apptroveConfig.setDeferredDeeplinkCallbackListener(function(deepLinkData) {
-                    console.log("Deferred Deeplink Callback received");
-                    console.log("DeepLink Data: " + JSON.stringify(deepLinkData));
-                    console.log("URL: " + deepLinkData.url);
+                    console.log('Deferred Deeplink Callback received')
+                    console.log('DeepLink Data: ' + JSON.stringify(deepLinkData))
+                    console.log('URL: ' + deepLinkData.url)
                 });
 
                 ApptroveSDK.initialize(apptroveConfig);
 
-                console.log("✅ Apptrove SDK Initialized");
+                console.log('✅ Apptrove SDK Initialized')
             } catch (error) {
-                console.log("❌ Apptrove Init Error:", error);
-            }
+                console.log('❌ Apptrove Init Error:', error)
             }
         }
 
