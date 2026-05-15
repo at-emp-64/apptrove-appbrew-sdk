@@ -107,29 +107,23 @@ jobs:
             CHANGES="_(no commits touched packages/apptrove-sdk since the last release)_"
           fi
 
-          BODY=$(cat <<EOF
-## Release \`@app-brew/apptrove-sdk@${VERSION}\`
-
-Merging this PR triggers \`.github/workflows/publish.yml\`, which will:
-
-1. Publish \`@app-brew/apptrove-sdk@${VERSION}\` to npm via OIDC (no token).
-2. Create and push the git tag \`@app-brew/apptrove-sdk@${VERSION}\` pointing at this PR's merge commit.
-3. Create a GitHub Release for that tag.
-
-### How to merge
-
-- **Use "Squash and merge"** so the merge commit on \`main\` keeps the title \`release(apptrove-sdk): v${VERSION}\`. The publish workflow keys off that exact commit-message format — if you rebase-merge or rename the squash commit, publish will not trigger.
-- Do not push more commits to this branch. If something needs to change, close this PR and re-run the **Release (prepare PR)** workflow.
-
-### ${RANGE_NOTE}
-
-${CHANGES}
-EOF
-)
+          BODY_FILE=$(mktemp)
+          {
+            printf '## Release `@app-brew/apptrove-sdk@%s`\n\n' "$VERSION"
+            printf 'Merging this PR triggers `.github/workflows/publish.yml`, which will:\n\n'
+            printf '1. Publish `@app-brew/apptrove-sdk@%s` to npm via OIDC (no token).\n' "$VERSION"
+            printf '2. Create and push the git tag `@app-brew/apptrove-sdk@%s` pointing at this PR'\''s merge commit.\n' "$VERSION"
+            printf '3. Create a GitHub Release for that tag.\n\n'
+            printf '### How to merge\n\n'
+            printf -- '- **Use "Squash and merge"** so the merge commit on `main` keeps the title `release(apptrove-sdk): v%s`. The publish workflow keys off that exact commit-message format — if you rebase-merge or rename the squash commit, publish will not trigger.\n' "$VERSION"
+            printf -- '- Do not push more commits to this branch. If something needs to change, close this PR and re-run the **Release (prepare PR)** workflow.\n\n'
+            printf '### %s\n\n' "$RANGE_NOTE"
+            printf '%s\n' "$CHANGES"
+          } > "$BODY_FILE"
 
           gh pr create \
             --base main \
             --head "$BRANCH" \
             --title "release(apptrove-sdk): v${VERSION}" \
-            --body "$BODY" \
+            --body-file "$BODY_FILE" \
             --label release
