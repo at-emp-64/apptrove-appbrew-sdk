@@ -68,10 +68,6 @@ jobs:
         if: steps.parse.outputs.match == 'true'
         uses: pnpm/action-setup@v4
 
-      - name: Install dependencies
-        if: steps.parse.outputs.match == 'true'
-        run: pnpm install --frozen-lockfile
-
       - name: Verify package.json version matches commit
         if: steps.parse.outputs.match == 'true'
         env:
