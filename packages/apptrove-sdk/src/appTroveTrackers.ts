@@ -3,7 +3,7 @@
     import { AnalyticsTrackerV2 } from '@gauntlet/analytics'
     import { AnalyticsEvent, AnalyticsPayload, AppConfig, IntegrationsConfig } from '@gauntlet/types'
 
-    export type ApptroveEnvironment = 'development' | 'production'
+    export type ApptroveEnvironment = 'development' | 'production' | 'testing'
 
     export interface ApptroveIntegrationConfig {
         apiKey: string
