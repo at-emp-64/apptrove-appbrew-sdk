@@ -62,12 +62,26 @@ That's it. Subsequent calls to `AnalyticsProvider.getInstance().sendEvent(...)` 
 
 ## Configuration
 
-The tracker initializes the Apptrove SDK with your app key and environment when `initTracker()` is called by `AnalyticsProvider`. Edit your fork's `src/appTroveTrackers.ts` to set your own:
+The tracker reads its config from `AppConfig.integrations.apptrove` when `AnalyticsProvider` calls `initTracker(config)`. There is **no need to edit the SDK source** — populate the values in the AppBrew dashboard for your app and they flow through automatically.
 
-- App key (passed to `new ApptroveConfig(...)`)
-- Environment (`development` / `production`)
-- App secret (`apptroveConfig.setAppSecret(...)`)
-- Event ID mappings, if you use different IDs in your Apptrove dashboard
+Expected shape:
+
+```ts
+integrations: {
+  apptrove: {
+    apiKey: string                              // required — your Apptrove SDK key
+    environment?: 'testing' | 'development' | 'production'  // optional, defaults to 'development'
+    appSecret?: {                               // optional, enables enhanced security
+      secretId: string
+      secretKey: string
+    }
+  }
+}
+```
+
+If `apptrove.apiKey` is missing from `AppConfig`, `initTracker` throws so misconfigurations fail loudly during app boot rather than silently dropping events.
+
+Event ID mappings are still part of the SDK source (see `sendEvent` in `src/appTroveTrackers.ts`). If your Apptrove dashboard uses different IDs, open an issue or PR.
 
 ---
 
