@@ -3,6 +3,8 @@
     import { AnalyticsTrackerV2 } from '@gauntlet/analytics'
     import { AnalyticsEvent, AnalyticsPayload, AppConfig, IntegrationsConfig } from '@gauntlet/types'
 
+    const defaultEventsWhitelist = Object.values(AnalyticsEvent)
+
     export type ApptroveEnvironment = 'development' | 'production' | 'testing'
 
     export interface ApptroveIntegrationConfig {
@@ -32,6 +34,8 @@
             }
 
             const { apiKey, environment = 'development', appSecret } = integrations.apptrove
+
+            this.eventsWhitelist = defaultEventsWhitelist
 
             try {
                 console.log('🚀 Initializing Apptrove SDK', { environment })
