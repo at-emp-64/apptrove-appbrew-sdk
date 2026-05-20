@@ -17,7 +17,7 @@ The app broadcasts events to all registered trackers. Your tracker extends `Anal
 ```typescript
 // src/my-tracker.ts
 import { AnalyticsTrackerV2 } from '@gauntlet/analytics'
-import { AnalyticsEvent, AnalyticsPayload, AppConfig } from '@gauntlet/types'
+import { AnalyticsEvent, AnalyticsEventParams, AnalyticsPayload, AppConfig } from '@gauntlet/types'
 
 export class MyTracker extends AnalyticsTrackerV2 {
 
@@ -28,8 +28,10 @@ export class MyTracker extends AnalyticsTrackerV2 {
     // Initialize your SDK or set up your API client
     // MyApi.init(myConfig.apiKey)
 
-    // Filter which events you receive (optional)
-    // If not set, you receive all events
+    // Required: declare which events your tracker receives.
+    // If you leave this unset, you silently get nothing
+    // (base default is an empty list = deny-all).
+    // Use Object.values(AnalyticsEvent) for all events.
     this.eventsWhitelist = [
       AnalyticsEvent.ADD_TO_CART,
       AnalyticsEvent.REMOVE_FROM_CART,
@@ -38,6 +40,11 @@ export class MyTracker extends AnalyticsTrackerV2 {
       AnalyticsEvent.SCREEN_VIEW,
       AnalyticsEvent.SEARCH,
     ]
+
+    // Required: declare which payload keys to forward.
+    // Unset = empty payload reaches sendEvent.
+    // Use Object.values(AnalyticsEventParams) for full payload.
+    this.paramsWhitelist = Object.values(AnalyticsEventParams)
 
     // Rename events to match your API (optional)
     this.eventsMapper = {
