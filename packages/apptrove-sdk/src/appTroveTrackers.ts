@@ -1,9 +1,10 @@
     import { ApptroveConfig, ApptroveSDK, ApptroveEvent } from 'react-native-apptrove';
     import { Platform } from 'react-native';
     import { AnalyticsTrackerV2 } from '@gauntlet/analytics'
-    import { AnalyticsEvent, AnalyticsPayload, AppConfig, IntegrationsConfig } from '@gauntlet/types'
+    import { AnalyticsEvent, AnalyticsEventParams, AnalyticsPayload, AppConfig, IntegrationsConfig } from '@gauntlet/types'
 
     const defaultEventsWhitelist = Object.values(AnalyticsEvent)
+    const defaultParamsWhitelist = Object.values(AnalyticsEventParams)
 
     export type ApptroveEnvironment = 'development' | 'production' | 'testing'
 
@@ -36,6 +37,7 @@
             const { apiKey, environment = 'development', appSecret } = integrations.apptrove
 
             this.eventsWhitelist = defaultEventsWhitelist
+            this.paramsWhitelist = defaultParamsWhitelist
 
             try {
                 console.log('🚀 Initializing Apptrove SDK', { environment })
