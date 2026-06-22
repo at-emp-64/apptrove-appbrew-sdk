@@ -36,7 +36,7 @@ There are three types of integrations you can build. Most packages combine more 
 
 ### 1. Custom Blocks
 
-UI components that render on screens. Register them in the block registry and the AppBrew dashboard can place them on any screen.
+UI components that render on screens. Register them in the block registry and the Appbrew dashboard can place them on any screen.
 
 See [Building Custom Blocks](./06-building-custom-blocks.md).
 
@@ -66,12 +66,12 @@ blockRegistry.set('my-custom-block', MyBlock)
 
 ## Package structure requirements
 
-For your integration to work with AppBrew apps, it must:
+For your integration to work with Appbrew apps, it must:
 
 1. Ship raw TypeScript source in `src/` (Metro compiles it at build time)
 2. Set `main` to `src/index.ts` in `package.json`
 3. List `src/` in the `files` field of `package.json`
-4. Declare `@app-brew/brewery` as a peer dependency
+4. Declare `@gauntlet/brewery` as a peer dependency
 
 ## Next steps
 

@@ -3,8 +3,8 @@ name: Release (prepare PR)
 # Manually triggered by the team to start a release of @app-brew/apptrove-sdk.
 # Bumps the package's version on a release branch and opens a PR titled
 #   release(apptrove-sdk): v<new-version>
-# Merging that PR triggers publish.yml, which publishes to npm via OIDC and
-# tags the merge commit as @app-brew/apptrove-sdk@<new-version>.
+# Merging that PR triggers publish.yml, which publishes to AppBrew's private
+# npm (verdaccio) and tags the merge commit as @app-brew/apptrove-sdk@<new-version>.
 
 on:
   workflow_dispatch:
@@ -108,7 +108,7 @@ jobs:
           {
             printf '## Release `@app-brew/apptrove-sdk@%s`\n\n' "$VERSION"
             printf 'Merging this PR triggers `.github/workflows/publish.yml`, which will:\n\n'
-            printf '1. Publish `@app-brew/apptrove-sdk@%s` to npm via OIDC (no token).\n' "$VERSION"
+            printf '1. Publish `@app-brew/apptrove-sdk@%s` to AppBrew private npm (https://npm.appbrew.tech/).\n' "$VERSION"
             printf '2. Create and push the git tag `@app-brew/apptrove-sdk@%s` pointing at this PR'\''s merge commit.\n' "$VERSION"
             printf '3. Create a GitHub Release for that tag.\n\n'
             printf '### How to merge\n\n'

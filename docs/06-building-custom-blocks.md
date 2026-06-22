@@ -1,6 +1,6 @@
 # Building Custom Blocks
 
-Custom blocks are config-driven React components. You define a config schema (source, style, options), the AppBrew dashboard populates it, and your block renders based on that config.
+Custom blocks are config-driven React components. You define a config schema (source, style, options), the Appbrew dashboard populates it, and your block renders based on that config.
 
 ## Block component interface
 
@@ -24,7 +24,7 @@ Every block's behavior is driven by three config sections:
 | `style` | Visual -- colors, spacing, typography, layout |
 | `options` | Behavior -- feature flags, toggles, thresholds |
 
-When building a block, start by defining its config schema. This tells the AppBrew dashboard team what fields your block expects.
+When building a block, start by defining its config schema. This tells the Appbrew dashboard team what fields your block expects.
 
 ## Example: Promo Banner block
 
@@ -130,8 +130,8 @@ export function registerBlocks() {
 
 Every block you build must have a documented config schema. This is used by:
 
-- **The AppBrew team** to configure your block in the dashboard
-- **Store owners** who can update the config directly from the AppBrew app installed in their Shopify store
+- **The Appbrew team** to configure your block in the dashboard
+- **Store owners** who can update the config directly from the Appbrew app installed in their Shopify store
 - **You** as a reference when maintaining or extending the block
 
 The better your schema docs, the easier it is for anyone to update content, styling, or behavior without touching code.

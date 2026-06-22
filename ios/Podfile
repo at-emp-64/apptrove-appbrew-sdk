@@ -1,3 +1,23 @@
+require 'pathname'
+
+# Monkey-patch Pathname#realdirpath to handle null byte errors in pnpm monorepos.
+# CocoaPods passes symlinked pnpm paths that contain null bytes to Pathname,
+# causing ArgumentError in project.rb. This affects Ruby >= 3.2 with CocoaPods <= 1.16.2.
+# See: https://github.com/CocoaPods/CocoaPods/issues/12866
+if RUBY_VERSION.to_f >= 3.2
+  class ::Pathname
+    if instance_method(:realdirpath)
+      alias_method :__original_realdirpath, :realdirpath
+
+      def realdirpath(*args)
+        __original_realdirpath(*args)
+      rescue ArgumentError
+        self
+      end
+    end
+  end
+end
+
 # Transform this into a `node_require` generic function:
 def node_require(script)
   # Resolve script with node to allow for hoisting

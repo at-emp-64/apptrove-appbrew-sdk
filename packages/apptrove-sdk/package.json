@@ -7,7 +7,7 @@
   ],
   "publishConfig": {
     "access": "restricted",
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://npm.appbrew.tech/"
   },
   "repository": {
     "type": "git",
@@ -20,7 +20,8 @@
   },
   "license": "UNLICENSED",
   "peerDependencies": {
-    "@app-brew/brewery": ">=1.0.0",
+    "@gauntlet/analytics": ">=0.24.0",
+    "@gauntlet/types": ">=0.24.0",
     "react-native-apptrove": "2.0.1"
   }
 }

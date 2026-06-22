@@ -6,8 +6,9 @@ name: Publish
 #
 # On match, this workflow:
 #   1. Verifies packages/apptrove-sdk/package.json version equals the parsed version.
-#   2. Verifies the version isn't already published to npm.
-#   3. Publishes @app-brew/apptrove-sdk@<version> to npm via OIDC.
+#   2. Verifies the version isn't already published to the verdaccio registry.
+#   3. Publishes @app-brew/apptrove-sdk@<version> to AppBrew's private npm
+#      (https://npm.appbrew.tech/) using the VERDACCIO_NPM_TOKEN write token.
 #   4. Tags the merge commit as @app-brew/apptrove-sdk@<version> and pushes.
 #   5. Creates a GitHub Release for that tag.
 
@@ -18,7 +19,6 @@ on:
 
 permissions:
   contents: write
-  id-token: write
   pull-requests: read
 
 concurrency:
@@ -64,11 +64,8 @@ jobs:
         if: steps.parse.outputs.match == 'true'
         uses: actions/setup-node@v4
         with:
-          # npm Trusted Publisher OIDC requires Node >= 22.14.0 and npm >= 11.5.1.
-          # Node 24 ships npm 11.x, satisfying both.
-          # https://docs.npmjs.com/trusted-publishers
+          # Matches use-node-version in the repo .npmrc.
           node-version: 24
-          registry-url: https://registry.npmjs.org
 
       - name: Verify package.json version matches commit
         if: steps.parse.outputs.match == 'true'
@@ -89,39 +86,40 @@ jobs:
           VERSION: ${{ steps.parse.outputs.version }}
         run: |
           set -euo pipefail
+          # Reads use the committed read-only token in the repo .npmrc; the
+          # @app-brew scope already resolves to https://npm.appbrew.tech/.
           if npm view "@app-brew/apptrove-sdk@${VERSION}" version --silent >/dev/null 2>&1; then
-            echo "::error::@app-brew/apptrove-sdk@${VERSION} is already published on npm. Bump the version and try again."
+            echo "::error::@app-brew/apptrove-sdk@${VERSION} is already published. Bump the version and try again."
             exit 1
           fi
           echo "Version ${VERSION} is not yet published. Proceeding."
 
-      - name: Publish to npm (OIDC)
+      - name: Publish to AppBrew private npm
         if: steps.parse.outputs.match == 'true'
         working-directory: packages/apptrove-sdk
         env:
           VERSION: ${{ steps.parse.outputs.version }}
+          VERDACCIO_NPM_TOKEN: ${{ secrets.VERDACCIO_NPM_TOKEN }}
         run: |
           set -euo pipefail
-          # npm CLI 11.5.1+ auto-detects OIDC env vars (set by `id-token: write`)
-          # and exchanges them with the npm Trusted Publisher binding — no token
-          # in env.
-          #
-          # Not passing --provenance: provenance attestations require all of
-          # OIDC + public repo + public package (npm docs / "trusted publishers").
-          # this package is `access: restricted` (private), so provenance is
-          # ineligible. with OIDC trusted publishing, provenance is generated
-          # automatically when eligible — the explicit flag would just error or
-          # be ignored for a private package.
-          #
+          if [ -z "${VERDACCIO_NPM_TOKEN:-}" ]; then
+            echo "::error::VERDACCIO_NPM_TOKEN secret is not set. Add a verdaccio write token scoped to @app-brew/apptrove-sdk in the repo's npm-publish environment."
+            exit 1
+          fi
+          # The committed repo .npmrc carries the read-only token; pass the write
+          # token on the command line so it overrides for publish only (CLI config
+          # beats the project .npmrc). publishConfig.registry targets verdaccio.
+          REGISTRY=https://npm.appbrew.tech/
+          AUTH="--//npm.appbrew.tech/:_authToken=${VERDACCIO_NPM_TOKEN}"
           # Prereleases publish under the prerelease identifier as the dist-tag
           # so `latest` never moves to a non-stable version.
           if [[ "$VERSION" == *-* ]]; then
             PREID="${VERSION#*-}"     # strip up to and including the first '-'
             PREID="${PREID%%.*}"      # strip from the first '.' onward
             echo "Prerelease detected, publishing under dist-tag: $PREID"
-            npm publish --access restricted --tag "$PREID"
+            npm publish --registry "$REGISTRY" "$AUTH" --tag "$PREID"
           else
-            npm publish --access restricted
+            npm publish --registry "$REGISTRY" "$AUTH"
           fi
 
       - name: Tag the release commit
@@ -164,7 +162,7 @@ jobs:
             NOTES="_(no commits touched packages/apptrove-sdk in this range)_"
           fi
 
-          BODY=$(printf '%s\n\n%s\n\nPublished to npm: https://www.npmjs.com/package/@app-brew/apptrove-sdk/v/%s\n' "$HEADER" "$NOTES" "$VERSION")
+          BODY=$(printf '%s\n\n%s\n\nPublished to AppBrew private npm (https://npm.appbrew.tech/) as @app-brew/apptrove-sdk@%s\n' "$HEADER" "$NOTES" "$VERSION")
 
           gh release create "$TAG" \
             --title "$TAG" \
