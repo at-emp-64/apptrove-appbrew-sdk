@@ -28,7 +28,7 @@ Checkout integrations replace the app's default payment screen with your own che
                              └──────────────────────────────┘
 ```
 
-Your package provides the block component. The AppBrew dashboard configures the payment screen to use it.
+Your package provides the block component. The Appbrew dashboard configures the payment screen to use it.
 
 ## Two implementation patterns
 
@@ -342,7 +342,7 @@ export function registerBlocks() {
 
 ## 4. Dashboard configuration
 
-These changes are made in the AppBrew dashboard when integrating your checkout into an app.
+These changes are made in the Appbrew dashboard when integrating your checkout into an app.
 
 ### Payment screen
 

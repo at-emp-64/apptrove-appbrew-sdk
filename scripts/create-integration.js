@@ -38,7 +38,7 @@ function createIntegration(name) {
     main: 'src/index.ts',
     files: ['src/'],
     peerDependencies: {
-      '@app-brew/brewery': '>=1.0.0',
+      '@gauntlet/brewery': '*',
     },
   }
   fs.writeFileSync(

@@ -19,18 +19,18 @@ import { registerBlocks } from './register-blocks'
 import { registerIcons } from './register-icons'
 import { AnalyticsProvider } from '@gauntlet/analytics'
 import { FirebaseTracker } from '@gauntlet/firebase'
-import { AppGiftProvider } from '@gauntlet/integrations/gift'
+import { AppGiftProvider } from '@gauntlet/gift'
 import { AppGiftV2Provider } from '@gauntlet/discount'
-import { JudgemeReviewProvider } from '@gauntlet/integrations/judgeme'
+import { JudgemeReviewProvider } from '@gauntlet/judgeme'
 import {
   AppbrewCurrencyProvider,
   AppbrewTracker,
   LocalWishlistProvider,
-} from '@gauntlet/integrations/appbrew'
+} from '@gauntlet/appbrew'
 import { Platform } from 'react-native'
-import { FacebookTracker } from '@gauntlet/integrations/facebook'
+import { FacebookTracker } from '@gauntlet/facebook'
 import { registerContainers } from './register-containers'
-import { FirebasePush } from '@gauntlet/integrations/firebase-push'
+import { FirebasePush } from '@gauntlet/firebase-push'
 import { ApptroveTracker } from '@app-brew/apptrove-sdk'
 
 const EnvConfig = Config.getConstants()
@@ -40,7 +40,7 @@ const reactNavigationIntegration = Sentry.reactNavigationIntegration()
 function initApp() {
   // if (!__DEV__) {
         Sentry.init({
-      dsn: 'https://YOUR_SENTRY_DSN@oXXXXXX.ingest.sentry.io/XXXXXX',
+      dsn: 'https://66d1ec06c6ab4dcbb03a8569cbd47f9e@o1270458.ingest.sentry.io/6461307',
       tracesSampleRate: 1.0,
       initialScope: {
         tags: { appId: EnvConfig.APP_ID, appName: EnvConfig.APP_NAME },

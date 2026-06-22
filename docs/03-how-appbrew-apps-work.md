@@ -1,12 +1,12 @@
-# How AppBrew Apps Work
+# How Appbrew Apps Work
 
 ## Overview
 
-AppBrew apps are config-driven React Native apps. The entire UI -- screens, navigation, blocks, themes -- is defined by a JSON config served from the AppBrew backend. The app fetches this config on launch and renders everything dynamically.
+Appbrew apps are config-driven React Native apps. The entire UI -- screens, navigation, blocks, themes -- is defined by a JSON config served from the Appbrew backend. The app fetches this config on launch and renders everything dynamically.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                  AppBrew Backend                        │
+│                  Appbrew Backend                        │
 │  (manages config, themes, integrations per store)       │
 └──────────────────────┬──────────────────────────────────┘
                        │  JSON config
@@ -54,7 +54,7 @@ AppBrew apps are config-driven React Native apps. The entire UI -- screens, navi
 User opens app
   │
   ▼
-App launches, fetches config from AppBrew backend
+App launches, fetches config from Appbrew backend
   ├── Config cached locally (offline support)
   ├── Registers blocks, trackers, integrations
   └── Sets up navigation from config

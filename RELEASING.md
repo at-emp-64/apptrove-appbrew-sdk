@@ -1,6 +1,6 @@
 # Releasing `@app-brew/apptrove-sdk`
 
-This repo publishes `@app-brew/apptrove-sdk` to npm using two GitHub Actions workflows. There are no long-lived npm tokens anywhere — authentication uses npm Trusted Publishers via GitHub Actions OIDC.
+This repo publishes `@app-brew/apptrove-sdk` to AppBrew's private npm registry (verdaccio, `https://npm.appbrew.tech/`) using two GitHub Actions workflows. The publish step authenticates with a single write token held only as the `VERDACCIO_NPM_TOKEN` GitHub Actions secret — it never appears in the repo or in anyone's laptop.
 
 ## The flow
 
@@ -10,7 +10,7 @@ This repo publishes `@app-brew/apptrove-sdk` to npm using two GitHub Actions wor
 │ workflow (manual)         │      │ merge the release PR│      │ runs automatically │
 └───────────────────────────┘      └─────────────────────┘      └────────────────────┘
          │                                  │                              │
-         │                                  │                              ├─ publishes to npm via OIDC
+         │                                  │                              ├─ publishes to verdaccio (write token)
          │                                  │                              ├─ tags merge commit
          ▼                                  ▼                              └─ creates GitHub Release
    bumps version on a              merging produces a commit on
@@ -31,8 +31,8 @@ This repo publishes `@app-brew/apptrove-sdk` to npm using two GitHub Actions wor
 5. **Squash-merge** the PR. The merge commit title must remain `release(apptrove-sdk): v<version>` — that's the contract the publish workflow keys off.
 6. The **Publish** workflow auto-runs on the merge commit:
    - Verifies `package.json` version matches the commit title.
-   - Verifies the version isn't already on npm.
-   - Publishes via OIDC.
+   - Verifies the version isn't already published to the registry.
+   - Publishes to verdaccio using the `VERDACCIO_NPM_TOKEN` write token.
    - Tags the merge commit as `@app-brew/apptrove-sdk@<version>` and pushes the tag.
    - Creates a GitHub Release (marked prerelease if the version has a `-suffix`).
 
@@ -45,9 +45,9 @@ Close the PR without merging. The release branch (`release/apptrove-sdk-v<versio
 Open **Actions → Publish** and read the failure step.
 
 - **Version mismatch** — someone edited `package.json` between bump and merge. Open a fix PR or re-run the release workflow with the correct version.
-- **Version already published** — the version on npm is immutable. Re-run **Release (prepare PR)** with a higher bump.
-- **OIDC / Trusted Publisher errors** — the npm Trusted Publisher config on npmjs.com has drifted from this repo/workflow/environment. Coordinate with the AppBrew team (npm scope owner).
-- **Tag step failed after publish succeeded** — the package is on npm but the tag isn't on the repo. Manually create the tag locally and push it: `git tag @app-brew/apptrove-sdk@<version> <merge-sha> && git push origin @app-brew/apptrove-sdk@<version>`.
+- **Version already published** — published versions are immutable. Re-run **Release (prepare PR)** with a higher bump.
+- **`VERDACCIO_NPM_TOKEN` is not set / 401 / 403** — the write token secret is missing, expired, or not scoped to publish `@app-brew/apptrove-sdk`. An `app-brew/npm-admins` member must mint a write token (scoped to `@app-brew/apptrove-sdk`) and set it in the repo's `npm-publish` environment.
+- **Tag step failed after publish succeeded** — the package is published but the tag isn't on the repo. Manually create the tag locally and push it: `git tag @app-brew/apptrove-sdk@<version> <merge-sha> && git push origin @app-brew/apptrove-sdk@<version>`.
 
 ## Why two workflows
 
@@ -58,7 +58,12 @@ We deliberately split *prepare* from *publish* so that:
 - The `npm-publish` environment can require approval on publish runs as an extra safety net.
 - Branch protection on `main` is honored without any bypass: release.yml only pushes to a release branch; publish.yml only pushes tags.
 
+## Tokens
+
+- **Read** (`.npmrc`, committed): a read-only verdaccio token that fetches `@gauntlet/*` and `@app-brew/*` tarballs for `pnpm install`. Read-only tokens cannot publish or mutate, so committing it is safe.
+- **Write** (`VERDACCIO_NPM_TOKEN` secret, never committed): scoped to publish `@app-brew/apptrove-sdk`. Minted by an `app-brew/npm-admins` member and stored in the repo's `npm-publish` GitHub Actions environment. Only `publish.yml` reads it.
+
 ## What's intentionally not here
 
-- **No `NPM_TOKEN` secret.** Authentication is done by npm's Trusted Publisher feature exchanging the workflow's OIDC token for a short-lived publish credential. The AppBrew team owns the npm scope and configures the Trusted Publisher binding on npmjs.com.
-- **No manual `npm publish` from anyone's laptop.** After the bootstrap publish that creates the package, every subsequent version must go through the workflow so the npm provenance attestation links it back to this exact repo + commit.
+- **No write token in the repo.** Publishing uses the `VERDACCIO_NPM_TOKEN` secret, injected only into the publish job. The committed `.npmrc` token is read-only.
+- **No manual `npm publish` from anyone's laptop.** After the bootstrap publish that creates the package, every subsequent version goes through the workflow so each release is tied to a reviewed, merged PR.

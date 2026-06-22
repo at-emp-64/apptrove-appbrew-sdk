@@ -1,48 +1,54 @@
 # Connecting Your Store
 
-By default, the sample app connects to the Natori store. To test your integration with your own Shopify store, you need an AppBrew account and a configured store.
+The app is **config-driven**: its screens, blocks, theme, and navigation come from app config served by the Appbrew backend, keyed by an `APP_ID` and `APP_THEME_ID` in `.env`.
 
-## Steps
+## It works out of the box
 
-### 1. Create or use an existing Shopify store
+The repo ships a working `APP_ID` / `APP_THEME_ID` (the **Natori** demo store), so you can build and run the sample app immediately and develop integrations against a real config — no Shopify store or account required.
 
-You need a Shopify store with products, collections, and a theme.
+## To edit the config yourself
 
-### 2. Install the AppBrew app
+Editing the app config (changing screens/blocks and seeing them live on the device) happens in the **Appbrew studio dashboard**, which needs your own store + dashboard access. Two ways to get it:
 
-Install the AppBrew app from the Shopify App Store into your store. This connects your store to the AppBrew backend and generates the credentials you need.
+- **Connect your own Shopify store** (below), or
+- **Get in touch with the Appbrew team** for studio dashboard access.
 
-### 3. Get your credentials from the AppBrew dashboard
+### 1. Install the Appbrew app on your Shopify store
 
-From the AppBrew dashboard, find your:
+Install the **Appbrew** mobile-builder app from the Shopify App Store into your store and finish the setup. This connects your store to the Appbrew backend and provisions your app + a theme.
 
-- **APP_ID** -- your app's unique identifier (e.g., `app_XXXXXXXXXXXXX`)
-- **APP_THEME_ID** -- the theme configuration to use (e.g., `theme_XXXXXXXXXXXXX`)
+### 2. Get your credentials from the Appbrew dashboard
 
-### 4. Update .env
+From the dashboard, copy your:
 
-Edit the `.env` file in the repo root:
+- **APP_ID** — your app's unique identifier (e.g. `app_XXXXXXXXXXXXX`)
+- **APP_THEME_ID** — the theme config to load (e.g. `theme_XXXXXXXXXXXXX`)
+
+### 3. Update `.env`
+
+Edit `.env` in the repo root — set `ENV=debug` so the app loads the editable (non-live) theme you're working on in the dashboard:
 
 ```
-ENV=release
+ENV=debug
 APP_ID="app_YOUR_APP_ID"
 APP_NAME="Your Store"
 APP_THEME_ID="theme_YOUR_THEME_ID"
 APP_SERVICE_URL="https://edge.app.appbrew.tech"
 ```
 
-`APP_SERVICE_URL` is the AppBrew edge API. Do not change it.
+`APP_SERVICE_URL` is the Appbrew edge API — don't change it.
 
-### 5. Rebuild and run
+### 4. Rebuild and run
 
 ```bash
 pnpm start --reset-cache
-pnpm ios
+pnpm run-ios        # or pnpm run-android
 ```
 
-The app now loads your store's config, products, and theme.
+The app now loads your store's config. Edit screens/blocks in the Appbrew dashboard and watch them update live on the device — the full end-to-end config flow.
 
 ## Notes
 
-- The Firebase config (`GoogleService-Info.plist`, `google-services.json`) in the repo is for the sample app. Push notifications and Firebase Analytics will still point to the sample project. This is fine for development.
-- If you need to test checkout flows with real payments, configure your Shopify store's payment settings accordingly.
+- `ENV=debug` points the app at the theme you're editing in the dashboard. `ENV=release` loads the published (live) theme.
+- The Firebase config (`GoogleService-Info.plist`, `google-services.json`) in the repo is for the sample app — push notifications and Firebase Analytics still point to the sample project. That's fine for development.
+- To test checkout with real payments, configure your Shopify store's payment settings accordingly.

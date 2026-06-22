@@ -15,7 +15,7 @@ pnpm start --reset-cache
 ## Testing your integration
 
 1. Wire it into `src/app/App.tsx` and/or `src/app/register-blocks.ts`
-2. Run the app: `pnpm ios` or `pnpm android`
+2. Run the app: `pnpm run-ios` or `pnpm run-android`
 3. Verify your blocks render and trackers receive events
 
 ## Publishing to npm
@@ -59,7 +59,7 @@ After publishing, confirm it works when installed from npm (not from local `pack
    ```bash
    pnpm install
    pnpm start --reset-cache
-   pnpm ios
+   pnpm run-ios
    ```
 
 ## What to include in your published package
@@ -82,13 +82,13 @@ Peer dependencies should include at minimum:
 
 ```json
 "peerDependencies": {
-  "@app-brew/brewery": ">=1.0.0"
+  "@gauntlet/brewery": "*"
 }
 ```
 
 Add any other native libraries your integration requires as peer dependencies (e.g., `react-native-webview` for checkout integrations).
 
-## What to deliver to the AppBrew team
+## What to deliver to the Appbrew team
 
 Along with your published npm package, provide:
 
