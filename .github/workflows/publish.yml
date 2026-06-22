@@ -60,12 +60,9 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
 
-      - name: Setup Node
+      - name: Install toolchain (mise)
         if: steps.parse.outputs.match == 'true'
-        uses: actions/setup-node@v4
-        with:
-          # Matches use-node-version in the repo .npmrc.
-          node-version: 24
+        uses: jdx/mise-action@v2
 
       - name: Verify package.json version matches commit
         if: steps.parse.outputs.match == 'true'
