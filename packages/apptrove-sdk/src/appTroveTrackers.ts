@@ -25,42 +25,80 @@
     }
 
     export class ApptroveTracker extends AnalyticsTrackerV2 {
-
         async initTracker(config?: AppConfig) {
             if (Platform.OS !== 'android' && Platform.OS !== 'ios') return
-
             const integrations = config?.integrations
-            if (!integrations || !isApptroveConfig(integrations)) {
-                throw new Error('[apptrove-sdk] integrations.apptrove.apiKey is missing from AppConfig — configure it on the AppBrew dashboard.')
+        try {
+            const apptroveConfigData = config?.integrations?.apptrove;
+
+            console.log('🚀 Apptrove Config Available:', !!apptroveConfigData);
+
+            if (!apptroveConfigData) {
+                console.log('⚠️ Apptrove config not found');
+                return;
             }
 
-            const { apiKey, environment = 'development', appSecret } = integrations.apptrove
+            const isAndroid = Platform.OS === 'android';
+            const isIOS = Platform.OS === 'ios';
 
-            this.eventsWhitelist = defaultEventsWhitelist
-            this.paramsWhitelist = defaultParamsWhitelist
 
-            try {
-                console.log('🚀 Initializing Apptrove SDK', { environment })
+            const sdkKey = isAndroid? apptroveConfigData.androidSdkKey : isIOS? apptroveConfigData.iosSdkKey: null;
 
-                const apptroveConfig = new ApptroveConfig(apiKey, environment)
+            const environment = isAndroid? apptroveConfigData.androidEnvironment : isIOS? apptroveConfigData.iosEnvironment: null;
 
-                if (appSecret) {
-                    apptroveConfig.setAppSecret(appSecret.secretId, appSecret.secretKey)
+            const signingId = isAndroid? apptroveConfigData.androidSdkSigningId : apptroveConfigData.iosSdkSigningId;
+
+            const signingKey = isAndroid? apptroveConfigData.androidSdkSigningKey: apptroveConfigData.iosSdkSigningKey;
+
+
+            if (!sdkKey) {
+                console.log('Apptrove SDK key not found for platform:', Platform.OS);
+                return;
+            }
+
+
+            console.log('Initializing Apptrove SDK for:', Platform.OS);
+
+
+            const apptroveConfig = new ApptroveConfig(sdkKey, environment);
+
+
+            // Set App Secret if available
+            if (signingId && signingKey) {
+                console.log('Setting App Secret');
+                apptroveConfig.setAppSecret(signingId, signingKey);
+            } else {  
+                console.log('App Secret not set - missing signing ID or key');
+            }
+
+
+            // Facebook App ID
+            if (apptroveConfigData?.facebookAppId) {
+                console.log('Setting Facebook App ID');
+                apptroveConfig.setFacebookAppId(apptroveConfigData.facebookAppId);
+            }
+
+
+            // Deferred Deeplink Callback
+            apptroveConfig.setDeferredDeeplinkCallbackListener(
+                (deepLinkData) => {
+                    console.log('Deferred Deeplink Callback received');
+                    console.log('DeepLink Data:', JSON.stringify(deepLinkData));
                 }
+            );
 
-                apptroveConfig.setDeferredDeeplinkCallbackListener(function(deepLinkData) {
-                    console.log('Deferred Deeplink Callback received')
-                    console.log('DeepLink Data: ' + JSON.stringify(deepLinkData))
-                    console.log('URL: ' + deepLinkData.url)
-                });
 
-                ApptroveSDK.initialize(apptroveConfig);
+            console.log('Calling ApptroveSDK.initialize()');
 
-                console.log('✅ Apptrove SDK Initialized')
-            } catch (error) {
-                console.log('❌ Apptrove Init Error:', error)
-            }
+            ApptroveSDK.initialize(apptroveConfig);
+
+            console.log('Apptrove SDK Initialized');
+
+        } catch (error) {
+            console.log('❌ Apptrove Init Error:', error
+            );
         }
+    }
 
         async sendEvent(event?: AnalyticsEvent, payload?: AnalyticsPayload) {
 
