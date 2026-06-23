@@ -73,9 +73,9 @@
 
 
             // Facebook App ID
-            if (apptroveConfigData?.facebookAppId) {
+            if (apptroveConfigData?.setFacebookAppId) {
                 console.log('Setting Facebook App ID');
-                apptroveConfig.setFacebookAppId(apptroveConfigData.facebookAppId);
+                apptroveConfig.setFacebookAppId(apptroveConfigData.setFacebookAppId);
             }
 
 
