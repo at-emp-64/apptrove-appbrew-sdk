@@ -31,7 +31,6 @@
             this.eventsWhitelist = defaultEventsWhitelist
             this.paramsWhitelist = defaultParamsWhitelist
 
-            const integrations = config?.integrations
         try {
             const apptroveConfigData = config?.integrations?.apptrove;
 
@@ -99,8 +98,7 @@
             console.log('Apptrove SDK Initialized');
 
         } catch (error) {
-            console.log('❌ Apptrove Init Error:', error
-            );
+            console.log('❌ Apptrove Init Error:', error);
         }
     }
 
