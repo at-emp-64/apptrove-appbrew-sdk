@@ -27,6 +27,10 @@
     export class ApptroveTracker extends AnalyticsTrackerV2 {
         async initTracker(config?: AppConfig) {
             if (Platform.OS !== 'android' && Platform.OS !== 'ios') return
+
+            this.eventsWhitelist = defaultEventsWhitelist
+            this.paramsWhitelist = defaultParamsWhitelist
+
             const integrations = config?.integrations
         try {
             const apptroveConfigData = config?.integrations?.apptrove;
