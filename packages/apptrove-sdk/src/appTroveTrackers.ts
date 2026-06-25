@@ -91,6 +91,16 @@
             );
 
 
+            // Wait for ATT authorization (iOS only) before init so events are
+            // held until the user responds to the prompt or the timeout elapses.
+            // A timeout of 0 means "don't wait", so only call for a positive value.
+            const attTimeout = Number(apptroveConfigData?.waitForATTUserAuthorization)
+            if (isIOS && attTimeout > 0) {
+                console.log('Waiting for ATT authorization, timeout:', attTimeout);
+                ApptroveSDK.waitForATTUserAuthorization(attTimeout);
+            }
+
+
             console.log('Calling ApptroveSDK.initialize()');
 
             ApptroveSDK.initialize(apptroveConfig);
