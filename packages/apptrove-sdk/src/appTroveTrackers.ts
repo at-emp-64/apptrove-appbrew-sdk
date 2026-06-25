@@ -8,59 +8,114 @@
 
     export type ApptroveEnvironment = 'development' | 'production' | 'testing'
 
+    // Shape of integrations.apptrove as configured in studio / the config mapper.
+    // Not part of @gauntlet/types' IntegrationsConfig, so it's accessed via a cast.
     export interface ApptroveIntegrationConfig {
-        apiKey: string
-        environment?: ApptroveEnvironment
-        appSecret?: {
-            secretId: string
-            secretKey: string
-        }
-    }
-
-    function isApptroveConfig(
-        config: IntegrationsConfig
-    ): config is IntegrationsConfig & { apptrove: ApptroveIntegrationConfig } {
-        const candidate = (config as IntegrationsConfig & { apptrove?: ApptroveIntegrationConfig }).apptrove
-        return Boolean(candidate && typeof candidate === 'object' && typeof candidate.apiKey === 'string' && candidate.apiKey.length > 0)
+        androidSdkKey?: string
+        androidSdkSigningId?: string
+        androidSdkSigningKey?: string
+        androidEnvironment?: ApptroveEnvironment
+        setFacebookAppId?: string
+        iosSdkKey?: string
+        iosSdkSigningId?: string
+        iosSdkSigningKey?: string
+        iosEnvironment?: ApptroveEnvironment
+        waitForATTUserAuthorization?: number
+        cleverTapIntegration?: boolean
+        appleSearchAdsIntegration?: boolean
     }
 
     export class ApptroveTracker extends AnalyticsTrackerV2 {
-
         async initTracker(config?: AppConfig) {
             if (Platform.OS !== 'android' && Platform.OS !== 'ios') return
-
-            const integrations = config?.integrations
-            if (!integrations || !isApptroveConfig(integrations)) {
-                throw new Error('[apptrove-sdk] integrations.apptrove.apiKey is missing from AppConfig — configure it on the AppBrew dashboard.')
-            }
-
-            const { apiKey, environment = 'development', appSecret } = integrations.apptrove
 
             this.eventsWhitelist = defaultEventsWhitelist
             this.paramsWhitelist = defaultParamsWhitelist
 
-            try {
-                console.log('🚀 Initializing Apptrove SDK', { environment })
+        try {
+            const apptroveConfigData = (
+                config?.integrations as
+                    | (IntegrationsConfig & { apptrove?: ApptroveIntegrationConfig })
+                    | undefined
+            )?.apptrove;
 
-                const apptroveConfig = new ApptroveConfig(apiKey, environment)
+            console.log('🚀 Apptrove Config Available:', !!apptroveConfigData);
 
-                if (appSecret) {
-                    apptroveConfig.setAppSecret(appSecret.secretId, appSecret.secretKey)
-                }
-
-                apptroveConfig.setDeferredDeeplinkCallbackListener(function(deepLinkData) {
-                    console.log('Deferred Deeplink Callback received')
-                    console.log('DeepLink Data: ' + JSON.stringify(deepLinkData))
-                    console.log('URL: ' + deepLinkData.url)
-                });
-
-                ApptroveSDK.initialize(apptroveConfig);
-
-                console.log('✅ Apptrove SDK Initialized')
-            } catch (error) {
-                console.log('❌ Apptrove Init Error:', error)
+            if (!apptroveConfigData) {
+                console.log('⚠️ Apptrove config not found');
+                return;
             }
+
+            const isAndroid = Platform.OS === 'android';
+            const isIOS = Platform.OS === 'ios';
+
+
+            const sdkKey = isAndroid? apptroveConfigData.androidSdkKey : isIOS? apptroveConfigData.iosSdkKey: null;
+
+            const environment = (isAndroid? apptroveConfigData.androidEnvironment : isIOS? apptroveConfigData.iosEnvironment: null) ?? 'development';
+
+            const signingId = isAndroid? apptroveConfigData.androidSdkSigningId : apptroveConfigData.iosSdkSigningId;
+
+            const signingKey = isAndroid? apptroveConfigData.androidSdkSigningKey: apptroveConfigData.iosSdkSigningKey;
+
+
+            if (!sdkKey) {
+                console.log('Apptrove SDK key not found for platform:', Platform.OS);
+                return;
+            }
+
+
+            console.log('Initializing Apptrove SDK for:', Platform.OS);
+
+
+            const apptroveConfig = new ApptroveConfig(sdkKey, environment);
+
+
+            // Set App Secret if available
+            if (signingId && signingKey) {
+                console.log('Setting App Secret');
+                apptroveConfig.setAppSecret(signingId, signingKey);
+            } else {  
+                console.log('App Secret not set - missing signing ID or key');
+            }
+
+
+            // Facebook App ID (Android only — iOS native ignores facebookAppId)
+            if (isAndroid && apptroveConfigData?.setFacebookAppId) {
+                console.log('Setting Facebook App ID');
+                apptroveConfig.setFacebookAppId(apptroveConfigData.setFacebookAppId);
+            }
+
+
+            // Deferred Deeplink Callback
+            apptroveConfig.setDeferredDeeplinkCallbackListener(
+                (deepLinkData) => {
+                    console.log('Deferred Deeplink Callback received');
+                    console.log('DeepLink Data:', JSON.stringify(deepLinkData));
+                }
+            );
+
+
+            // Wait for ATT authorization (iOS only) before init so events are
+            // held until the user responds to the prompt or the timeout elapses.
+            // A timeout of 0 means "don't wait", so only call for a positive value.
+            const attTimeout = Number(apptroveConfigData?.waitForATTUserAuthorization)
+            if (isIOS && attTimeout > 0) {
+                console.log('Waiting for ATT authorization, timeout:', attTimeout);
+                ApptroveSDK.waitForATTUserAuthorization(attTimeout);
+            }
+
+
+            console.log('Calling ApptroveSDK.initialize()');
+
+            ApptroveSDK.initialize(apptroveConfig);
+
+            console.log('Apptrove SDK Initialized');
+
+        } catch (error) {
+            console.log('❌ Apptrove Init Error:', error);
         }
+    }
 
         async sendEvent(event?: AnalyticsEvent, payload?: AnalyticsPayload) {
 
