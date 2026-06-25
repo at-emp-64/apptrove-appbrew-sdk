@@ -48,7 +48,7 @@
 
             const sdkKey = isAndroid? apptroveConfigData.androidSdkKey : isIOS? apptroveConfigData.iosSdkKey: null;
 
-            const environment = isAndroid? apptroveConfigData.androidEnvironment : isIOS? apptroveConfigData.iosEnvironment: null;
+            const environment = (isAndroid? apptroveConfigData.androidEnvironment : isIOS? apptroveConfigData.iosEnvironment: null) ?? 'development';
 
             const signingId = isAndroid? apptroveConfigData.androidSdkSigningId : apptroveConfigData.iosSdkSigningId;
 
