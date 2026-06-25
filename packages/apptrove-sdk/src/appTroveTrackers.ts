@@ -8,20 +8,21 @@
 
     export type ApptroveEnvironment = 'development' | 'production' | 'testing'
 
+    // Shape of integrations.apptrove as configured in studio / the config mapper.
+    // Not part of @gauntlet/types' IntegrationsConfig, so it's accessed via a cast.
     export interface ApptroveIntegrationConfig {
-        apiKey: string
-        environment?: ApptroveEnvironment
-        appSecret?: {
-            secretId: string
-            secretKey: string
-        }
-    }
-
-    function isApptroveConfig(
-        config: IntegrationsConfig
-    ): config is IntegrationsConfig & { apptrove: ApptroveIntegrationConfig } {
-        const candidate = (config as IntegrationsConfig & { apptrove?: ApptroveIntegrationConfig }).apptrove
-        return Boolean(candidate && typeof candidate === 'object' && typeof candidate.apiKey === 'string' && candidate.apiKey.length > 0)
+        androidSdkKey?: string
+        androidSdkSigningId?: string
+        androidSdkSigningKey?: string
+        androidEnvironment?: ApptroveEnvironment
+        setFacebookAppId?: string
+        iosSdkKey?: string
+        iosSdkSigningId?: string
+        iosSdkSigningKey?: string
+        iosEnvironment?: ApptroveEnvironment
+        waitForATTUserAuthorization?: number
+        cleverTapIntegration?: boolean
+        appleSearchAdsIntegration?: boolean
     }
 
     export class ApptroveTracker extends AnalyticsTrackerV2 {
@@ -32,7 +33,11 @@
             this.paramsWhitelist = defaultParamsWhitelist
 
         try {
-            const apptroveConfigData = config?.integrations?.apptrove;
+            const apptroveConfigData = (
+                config?.integrations as
+                    | (IntegrationsConfig & { apptrove?: ApptroveIntegrationConfig })
+                    | undefined
+            )?.apptrove;
 
             console.log('🚀 Apptrove Config Available:', !!apptroveConfigData);
 
