@@ -75,8 +75,8 @@
             }
 
 
-            // Facebook App ID
-            if (apptroveConfigData?.setFacebookAppId) {
+            // Facebook App ID (Android only — iOS native ignores facebookAppId)
+            if (isAndroid && apptroveConfigData?.setFacebookAppId) {
                 console.log('Setting Facebook App ID');
                 apptroveConfig.setFacebookAppId(apptroveConfigData.setFacebookAppId);
             }
