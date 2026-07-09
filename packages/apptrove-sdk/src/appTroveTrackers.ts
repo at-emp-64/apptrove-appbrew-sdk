@@ -24,8 +24,18 @@
         cleverTapIntegration?: boolean
         appleSearchAdsIntegration?: boolean
     }
+    
 
     export class ApptroveTracker extends AnalyticsTrackerV2 {
+
+        private userDetails = {
+        email: "",
+        phone: "",
+        firstName: "",
+        lastName: "",
+        };
+
+
         async initTracker(config?: AppConfig) {
             if (Platform.OS !== 'android' && Platform.OS !== 'ios') return
 
@@ -117,6 +127,19 @@
         }
     }
 
+        async setUserDetails(user?: any) {
+            // Called when a user signs in or profile updates
+            // user contains: email, phone, firstName, lastName
+            console.log('Setting user details: 132', {email: user?.email, phone: user?.phone });
+            console.log("Apptrove Event Tracked 132");
+            this.userDetails = {
+            email: user?.email || "",
+            phone: user?.phone || "",
+            firstName: user?.firstName || "",
+            lastName: user?.lastName || "",
+            };
+        }
+
         async sendEvent(event?: AnalyticsEvent, payload?: AnalyticsPayload) {
 
             console.log('📊 Event:', event , "------", payload);
@@ -201,19 +224,6 @@
             });
         }
 
-        // // ✅ Single reusable Apptrove event sender
-        // track(eventId: string, payload?: AnalyticsPayload) {
-        //     try {
-        //     var apptroveEvent = new ApptroveEvent(eventId); // Built-in event
-        //     apptroveEvent.ev = payload; // Custom payload
-        //     ApptroveSDK.trackEvent(apptroveEvent);
-
-        //     } catch (error) {
-        //     console.error('❌ Apptrove Event Error:', error);
-        //     }
-        // }
-
-        // <!-- ✅ FCM token function for uninstall Tracking -->
 
         sendFCMToken(fcmToken: string) { 
             try {
@@ -229,9 +239,35 @@
             }
         }
 
+        private async waitForUserDetails(timeout = 500): Promise<void> {
+
+            if (this.userDetails.email || this.userDetails.phone) {
+                return;
+            }
+
+            return new Promise(resolve => {
+
+                setTimeout(() => {
+
+                    console.log(
+                        "⏳ 500ms wait completed for user details",
+                        this.userDetails
+                    );
+
+                    resolve();
+
+                }, timeout);
+
+            });
+        }
 
 
-        track(eventId: string, payload?: any) {
+        async track(eventId: string, payload?: any) {
+
+            const isAuthEvent =
+            eventId === "o91gt1Q0PK" ||   // Login
+            eventId === "8ASKXJ1vWO";     // Signup
+
             try {
                 if (!eventId) {
                 console.warn("⚠️ Event ID is missing");
@@ -306,8 +342,34 @@
                 }
                 }
 
-                // 🔹 Fire event
+                console.log("Apptrove Event Tracked 331");
+
+                if (isAuthEvent) {
+                    
+
+                    await this.waitForUserDetails(500);
+
+                    if (this.userDetails.email) {
+
+                        ApptroveSDK.setUserEmail(
+                            this.userDetails.email
+                        );
+                    }
+
+
+                    if (this.userDetails.phone) {
+                        ApptroveSDK.setUserPhone(
+                            this.userDetails.phone
+                        );
+                    }
+                }
+
+                console.log("Apptrove Event Tracked 381");
+
+                // Fire event
                 ApptroveSDK.trackEvent(apptroveEvent);
+
+                console.log("Apptrove Event Tracked 384");
 
             } catch (error) {
                 console.error("❌ Apptrove Event Error:", error);
