@@ -342,11 +342,7 @@
                 }
                 }
 
-                console.log("Apptrove Event Tracked 331");
-
                 if (isAuthEvent) {
-                    
-
                     await this.waitForUserDetails(500);
 
                     if (this.userDetails.email) {
@@ -363,8 +359,6 @@
                         );
                     }
                 }
-
-                console.log("Apptrove Event Tracked 381");
 
                 // Fire event
                 ApptroveSDK.trackEvent(apptroveEvent);
