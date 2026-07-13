@@ -31,8 +31,7 @@
         private userDetails = {
         email: "",
         phone: "",
-        firstName: "",
-        lastName: "",
+        name: ""
         };
 
 
@@ -130,13 +129,10 @@
         async setUserDetails(user?: any) {
             // Called when a user signs in or profile updates
             // user contains: email, phone, firstName, lastName
-            console.log('Setting user details: 132', {email: user?.email, phone: user?.phone });
-            console.log("Apptrove Event Tracked 132");
             this.userDetails = {
             email: user?.email || "",
             phone: user?.phone || "",
-            firstName: user?.firstName || "",
-            lastName: user?.lastName || "",
+            name: `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim()
             };
         }
 
@@ -239,18 +235,15 @@
             }
         }
 
-        private async waitForUserDetails(timeout = 500): Promise<void> {
+        private async waitForUserDetails(timeout = 1000): Promise<void> {
 
             if (this.userDetails.email || this.userDetails.phone) {
                 return;
             }
-
             return new Promise(resolve => {
-
                 setTimeout(() => {
-
                     console.log(
-                        "⏳ 500ms wait completed for user details",
+                        "⏳ 1000ms wait completed for user details",
                         this.userDetails
                     );
 
@@ -260,7 +253,6 @@
 
             });
         }
-
 
         async track(eventId: string, payload?: any) {
 
@@ -343,21 +335,16 @@
                 }
 
                 if (isAuthEvent) {
-                    await this.waitForUserDetails(500);
-
-                    if (this.userDetails.email) {
-
-                        ApptroveSDK.setUserEmail(
-                            this.userDetails.email
-                        );
-                    }
-
-
-                    if (this.userDetails.phone) {
-                        ApptroveSDK.setUserPhone(
-                            this.userDetails.phone
-                        );
-                    }
+                    await this.waitForUserDetails(1000);
+                }
+                if (this.userDetails.email) {
+                    ApptroveSDK.setUserEmail(this.userDetails.email);
+                }
+                if (this.userDetails.phone) {
+                    ApptroveSDK.setUserPhone(this.userDetails.phone);
+                }
+                if (this.userDetails.name) {
+                    ApptroveSDK.setUserName(this.userDetails.name);
                 }
 
                 // Fire event
@@ -370,146 +357,3 @@
             }
         }
     }
-
-
-
-   // import { TrackierConfig, TrackierSDK, TrackierEvent } from 'react-native-trackier';
-    // import { Platform } from 'react-native';
-    // import { AnalyticsTrackerV2 } from '@gauntlet/analytics'
-    // import { AnalyticsEvent, AnalyticsPayload, AppConfig } from '@gauntlet/types'
-
-
-    // export class ApptroveTracker extends AnalyticsTrackerV2  {
-
-    //     async initTracker(config?: AppConfig) {
-            
-    //         if (Platform.OS === 'android' || Platform.OS === 'ios') {
-    //         try {
-    //             console.log('Initializing ApptroveTracker initTracker')
-    //             const trackierConfig = new TrackierConfig("ee9f21fb-5848-4ed9-8d9c-e4093e6d220c", "development");
-    //             TrackierSDK.initialize(trackierConfig);
-
-    //             console.log("✅ Trackier SDK Initialized");
-    //             } catch (error) {
-    //             console.log("❌ Trackier Init Error:", error);
-    //             }
-    //         } else {
-    //             console.log("⚠️ Trackier not supported on this platform");
-    //         }
-            
-    //     }
-
-    //     async sendEvent(event?: AnalyticsEvent, payload?: AnalyticsPayload) {
-    //     // Called for every event (after filtering and mapping)
-    //     // Send to your API
-    //     // console.log('Initializing ApptroveTracker sendEvent', event, payload)
-    //     //     await fetch('https://api.yourservice.com/events', {
-    //     //     method: 'POST',
-    //     //     headers: { 'Content-Type': 'application/json' },
-    //     //     body: JSON.stringify({ event, payload, timestamp: Date.now() }),
-    //     //     })
-
-    //     console.log('Initializing ApptroveTracker sendEvent', event, payload)
-    //         switch (event) {
-    //             case 'add_to_cart':
-    //             addToCart(payload);
-    //             break;
-
-    //             case 'remove_from_cart':
-    //             removeFromCart(payload);
-    //             break;
-
-    //             case 'view_item':
-    //             viewItem(payload);
-    //             break;
-
-    //             case 'view_item_list':
-    //             viewItemList(payload);
-    //             break;
-
-    //             case 'view_cart':
-    //             viewCart(payload);
-    //             break;
-
-    //             case 'begin_checkout':
-    //             beginCheckout(payload);
-    //             break;
-
-    //             case 'purchase':
-    //             purchase(payload);
-    //             break;
-
-    //             case 'search':
-    //             search(payload);
-    //             break;
-
-    //             case 'screen_view':
-    //             screenView(payload);
-    //             break;
-
-    //             case 'add_to_wishlist':
-    //             addToWishlist(payload);
-    //             break;
-
-    //             case 'remove_from_wishlist':
-    //             removeFromWishlist(payload);
-    //             break;
-
-    //             case 'login':
-    //             login(payload);
-    //             break;
-
-    //             case 'signup':
-    //             signup(payload);
-    //             break;
-
-    //             case 'select_item':
-    //             selectItem(payload);
-    //             break;
-
-    //             case 'apply_coupon':
-    //             applyCoupon(payload);
-    //             break;
-
-    //             case 'remove_coupon':
-    //             removeCoupon(payload);
-    //             break;
-
-    //             default:
-    //             console.log('Unhandled event:', event);
-    //             break;
-    //         }
-    //     }
-
-    //     async sendScreenView(screenName?: string) {
-    //         // Called on every screen navigation
-    //         console.log('Initializing ApptroveTracker sendScreenView')
-    //         await fetch('https://api.yourservice.com/pageview', {
-    //         method: 'POST',
-    //         headers: { 'Content-Type': 'application/json' },
-    //         body: JSON.stringify({ screen: screenName }),
-    //         })
-    //     }
-
-    //     sendTrackierEvents(eventsId, jsonData, params) {
-    //         try {
-    //         var trackierEvent = new TrackierEvent(eventsId);
-    //         trackierEvent.ev = jsonData;
-    //         console.log("Tarckier Events---", trackierEvent);
-    //         TrackierSDK.trackEvent(trackierEvent);
-    //         } catch (error) {
-    //         console.error('Error sending Trackier event:', error);
-    //         }
-    //     }
-
-    //     callApptroveSDK(){
-    //         //console.log('Initializing ApptroveTracker with config:', config)
-    //         console.log('Initializing ApptroveTracker in AppTroveTrackers.ts')
-    //         const trackierConfig = new TrackierConfig("ee9f21fb-5848-4ed9-8d9c-e4093e6d220c", "developemnet");
-    //         //trackierConfig.setAppSecret("", "");
-    //         TrackierSDK.initialize(trackierConfig);
-    //     }
-
-
-    // }
-
