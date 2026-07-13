@@ -243,9 +243,7 @@
             return new Promise(resolve => {
                 setTimeout(() => {
                     console.log(
-                        "⏳ 1000ms wait completed for user details",
-                        this.userDetails
-                    );
+                        "⏳ 1000ms wait completed for user details");
 
                     resolve();
 
@@ -349,8 +347,6 @@
 
                 // Fire event
                 ApptroveSDK.trackEvent(apptroveEvent);
-
-                console.log("Apptrove Event Tracked 384");
 
             } catch (error) {
                 console.error("❌ Apptrove Event Error:", error);
