@@ -1,6 +1,6 @@
 {
   "name": "@app-brew/apptrove-sdk",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "main": "src/index.ts",
   "files": [
     "src/"
@@ -22,6 +22,7 @@
   "peerDependencies": {
     "@gauntlet/analytics": ">=0.24.0",
     "@gauntlet/types": ">=0.24.0",
-    "react-native-apptrove": "2.0.1"
+    "react-native-apptrove": "2.0.1",
+    "@react-native-firebase/messaging": "23.3.1"
   }
 }
