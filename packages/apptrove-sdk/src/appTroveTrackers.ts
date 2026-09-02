@@ -25,6 +25,8 @@
         waitForATTUserAuthorization?: number
         cleverTapIntegration?: boolean
         appleSearchAdsIntegration?: boolean
+        sendFcmToken?: boolean
+        sendApnToken?: boolean
     }
     
 
