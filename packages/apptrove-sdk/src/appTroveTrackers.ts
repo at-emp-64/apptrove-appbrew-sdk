@@ -141,9 +141,7 @@
                 }
             );
 
-            await this.getPushTokens(enableFcmToken, enableApnToken);
-
-            //await this.getPushTokens(true, true);
+            void this.getPushTokens(enableFcmToken, enableApnToken);
 
             console.log('Apptrove SDK Initialized');
 
@@ -254,65 +252,84 @@
                 // IOS - APNs TOKEN
                 // ---------------------------------------------------------
                 if (Platform.OS === "ios" && enableApnToken) {
-                    console.log("APNs token tracking is enabled");
-                    const apnsToken = await messaging().getAPNSToken();
-                    if (apnsToken) {
-                        console.log("APNs Token:", apnsToken);
-                        ApptroveSDK.sendAPNToken(apnsToken);
-                    } else {
-                        console.log("⚠️ APNs token not available yet");
+                    console.log("📱 iOS: APNs token tracking is enabled");
+                    
+                    console.log("📱 iOS: Registering for remote messages...");
+                    await messaging().registerDeviceForRemoteMessages();
+                    console.log("📱 iOS: Registered for remote messages");
+                    
+                    let apnsToken: string | null = null;
+                    let attempts = 0;
+                    const maxAttempts = 10;
+                    
+                    while (attempts < maxAttempts && !apnsToken) {
+                        attempts++;
+                        try {
+                            apnsToken = await messaging().getAPNSToken();
+                            if (apnsToken) {
+                                console.log(`iOS APNs Token obtained on attempt ${attempts}:`, apnsToken);
+                                ApptroveSDK.sendAPNToken(apnsToken);
+                                break;
+                            }
+                            console.log(`⏳ iOS APNs attempt ${attempts}: No token yet, waiting...`);
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                        } catch (error) {
+                            console.log(`⚠️ iOS APNs attempt ${attempts} failed:`, error);
+                        }
+                    }
+                    
+                    if (!apnsToken) {
+                        console.log("iOS: Failed to get APNs token after", maxAttempts, "attempts");
                     }
                 }
 
                 // ---------------------------------------------------------
-                // FCM TOKEN
+                // FCM TOKEN - ANDROID ONLY
                 // ---------------------------------------------------------
-                if (enableFcmToken) {
-                    console.log("📱 FCM token tracking is enabled----");
+                if (Platform.OS === "android" && enableFcmToken) {
+                    console.log("📱 Android: FCM token tracking is enabled");
                     
                     // Request permission first
                     const authStatus = await messaging().requestPermission();
                     const enabled = authStatus === AuthorizationStatus.AUTHORIZED || authStatus === AuthorizationStatus.PROVISIONAL;
 
-                    console.log("Permission enabled:", enabled);
+                    console.log("📱 Android: Permission enabled:", enabled);
                     
                     if (!enabled) {
-                        console.log('⚠️ Notification permission not granted.');
+                        console.log('⚠️ Android: Notification permission not granted.');
                         return;
                     }
 
-                    // Register for remote messages (required for iOS)
-                    if (Platform.OS === 'ios') {
-                        await messaging().registerDeviceForRemoteMessages();
-                    }
-
-                    // Get the ACTUAL token with retry
+                    // Get the token with retry (FCM token is cached, so less retries needed)
                     let fcmToken: string | null = null;
                     let attempts = 0;
-                    const maxAttempts = 5;
+                    const maxAttempts = 3; // FCM is cached, so fewer attempts needed
                     
                     while (attempts < maxAttempts && !fcmToken) {
                         attempts++;
                         try {
                             fcmToken = await messaging().getToken();
                             if (fcmToken) {
-                                console.log(`FCM Token obtained on attempt ${attempts}:`, fcmToken);
+                                console.log(`Android FCM Token obtained on attempt ${attempts}:`, fcmToken);
                                 ApptroveSDK.sendFcmToken(fcmToken);
                                 break;
                             }
-                            console.log(`Attempt ${attempts}: No token yet, waiting...`);
-                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            console.log(`⏳ Android FCM attempt ${attempts}: No token yet, waiting...`);
+                            await new Promise(resolve => setTimeout(resolve, 500));
                         } catch (error) {
-                            console.log(`Attempt ${attempts} failed:`, error);
+                            console.log(`Android FCM attempt ${attempts} failed:`, error);
                         }
                     }
                     
                     if (!fcmToken) {
-                        console.log("Failed to get FCM token after", maxAttempts, "attempts");
+                        console.log("Android: Failed to get FCM token after", maxAttempts, "attempts");
                     }
-                } else {
-                    console.log("FCM token tracking is disabled by configuration");
+                } else if (Platform.OS === "android" && !enableFcmToken) {
+                    console.log("📱 Android: FCM token tracking is disabled by configuration");
+                } else if (Platform.OS === "ios") {
+                    console.log("📱 iOS: FCM token tracking skipped - iOS uses APNs only");
                 }
+                
             } catch (error: any) {
                 console.error("Error fetching push tokens:", error);
                 if (error?.code) console.log('Error code:', error.code);
