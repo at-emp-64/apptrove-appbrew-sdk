@@ -2,6 +2,8 @@
     import { Platform } from 'react-native';
     import { AnalyticsTrackerV2 } from '@gauntlet/analytics'
     import { AnalyticsEvent, AnalyticsEventParams, AnalyticsPayload, AppConfig, IntegrationsConfig } from '@gauntlet/types'
+    import messaging from '@react-native-firebase/messaging';
+    import { AuthorizationStatus } from '@react-native-firebase/messaging';
 
     const defaultEventsWhitelist = Object.values(AnalyticsEvent)
     const defaultParamsWhitelist = Object.values(AnalyticsEventParams)
@@ -119,7 +121,30 @@
 
             ApptroveSDK.initialize(apptroveConfig);
 
+
+            // ---------------------------------------------------------
+            // PUSH TOKEN CONFIGURATION
+            // ---------------------------------------------------------
+
+            const enableFcmToken =
+                apptroveConfigData?.sendFcmToken === true;
+
+            const enableApnToken =
+                apptroveConfigData?.sendApnToken === true;
+
+            console.log(
+                "Push Token Configuration:",
+                {
+                    enableFcmToken,
+                    enableApnToken,
+                    platform: Platform.OS
+                }
+            );
+
+            void this.getPushTokens(enableFcmToken, enableApnToken);
+
             console.log('Apptrove SDK Initialized');
+
 
         } catch (error) {
             console.log('❌ Apptrove Init Error:', error);
@@ -221,19 +246,97 @@
         }
 
 
-        sendFCMToken(fcmToken: string) { 
+        private async getPushTokens(enableFcmToken: boolean, enableApnToken: boolean): Promise<void> {
             try {
-                if (!fcmToken || typeof fcmToken !== "string") {
-                console.warn("⚠️ Invalid FCM token");
-                return;
+                // ---------------------------------------------------------
+                // IOS - APNs TOKEN
+                // ---------------------------------------------------------
+                if (Platform.OS === "ios" && enableApnToken) {
+                    console.log("📱 iOS: APNs token tracking is enabled");
+                    
+                    console.log("📱 iOS: Registering for remote messages...");
+                    await messaging().registerDeviceForRemoteMessages();
+                    console.log("📱 iOS: Registered for remote messages");
+                    
+                    let apnsToken: string | null = null;
+                    let attempts = 0;
+                    const maxAttempts = 10;
+                    
+                    while (attempts < maxAttempts && !apnsToken) {
+                        attempts++;
+                        try {
+                            apnsToken = await messaging().getAPNSToken();
+                            if (apnsToken) {
+                                console.log(`iOS APNs Token obtained on attempt ${attempts}:`, apnsToken);
+                                ApptroveSDK.sendAPNToken(apnsToken);
+                                break;
+                            }
+                            console.log(`⏳ iOS APNs attempt ${attempts}: No token yet, waiting...`);
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                        } catch (error) {
+                            console.log(`⚠️ iOS APNs attempt ${attempts} failed:`, error);
+                        }
+                    }
+                    
+                    if (!apnsToken) {
+                        console.log("iOS: Failed to get APNs token after", maxAttempts, "attempts");
+                    }
                 }
 
-                ApptroveSDK.sendFcmToken(fcmToken); 
+                // ---------------------------------------------------------
+                // FCM TOKEN - ANDROID ONLY
+                // ---------------------------------------------------------
+                if (Platform.OS === "android" && enableFcmToken) {
+                    console.log("📱 Android: FCM token tracking is enabled");
+                    
+                    // Request permission first
+                    const authStatus = await messaging().requestPermission();
+                    const enabled = authStatus === AuthorizationStatus.AUTHORIZED || authStatus === AuthorizationStatus.PROVISIONAL;
 
-            } catch (error) {
-                console.error('❌ Apptrove FCM Token Error:', error);
+                    console.log("📱 Android: Permission enabled:", enabled);
+                    
+                    if (!enabled) {
+                        console.log('⚠️ Android: Notification permission not granted.');
+                        return;
+                    }
+
+                    // Get the token with retry (FCM token is cached, so less retries needed)
+                    let fcmToken: string | null = null;
+                    let attempts = 0;
+                    const maxAttempts = 3; // FCM is cached, so fewer attempts needed
+                    
+                    while (attempts < maxAttempts && !fcmToken) {
+                        attempts++;
+                        try {
+                            fcmToken = await messaging().getToken();
+                            if (fcmToken) {
+                                console.log(`Android FCM Token obtained on attempt ${attempts}:`, fcmToken);
+                                ApptroveSDK.sendFcmToken(fcmToken);
+                                break;
+                            }
+                            console.log(`⏳ Android FCM attempt ${attempts}: No token yet, waiting...`);
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                        } catch (error) {
+                            console.log(`Android FCM attempt ${attempts} failed:`, error);
+                        }
+                    }
+                    
+                    if (!fcmToken) {
+                        console.log("Android: Failed to get FCM token after", maxAttempts, "attempts");
+                    }
+                } else if (Platform.OS === "android" && !enableFcmToken) {
+                    console.log("📱 Android: FCM token tracking is disabled by configuration");
+                } else if (Platform.OS === "ios") {
+                    console.log("📱 iOS: FCM token tracking skipped - iOS uses APNs only");
+                }
+                
+            } catch (error: any) {
+                console.error("Error fetching push tokens:", error);
+                if (error?.code) console.log('Error code:', error.code);
+                return;
             }
         }
+
 
         private async waitForUserDetails(timeout = 1000): Promise<void> {
 

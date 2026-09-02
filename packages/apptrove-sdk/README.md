@@ -120,3 +120,40 @@ You skipped the `resolutionStrategy` block above. Add it to `android/app/build.g
 
 **Events not appearing in Apptrove**
 Check Metro logs for `🚀 Initializing Trackier SDK` and `✅ Apptrove SDK Initialized`. If those don't appear, `ApptroveTracker` isn't being added to `AnalyticsProvider`. Check Metro logs for `⚠️ Unhandled event:` — events without a mapping are dropped.
+
+## Android Manifest Configuration
+
+To enable your app to retrieve **referral attribution data from Meta apps**, add the following `<queries>` configuration to the `android/app/src/main/AndroidManifest.xml` file.
+
+### Manifest Configuration
+
+Add the following block inside the `<manifest>` element:
+
+```xml
+<queries>
+    <package android:name="com.facebook.katana" />
+    <package android:name="com.facebook.lite" />
+    <package android:name="com.instagram.android" />
+</queries>
+```
+
+### Example
+
+Your `AndroidManifest.xml` should look similar to this:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <queries>
+        <package android:name="com.facebook.katana" />
+        <package android:name="com.facebook.lite" />
+        <package android:name="com.instagram.android" />
+    </queries>
+
+    <!-- Other manifest configurations -->
+
+</manifest>
+```
+
+> **Note:** The `<queries>` element must be placed directly inside the `<manifest>` element, not inside `<application>`.
