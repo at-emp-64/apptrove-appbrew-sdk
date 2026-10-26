@@ -17,18 +17,18 @@ import Config from 'react-native-config'
 import * as Sentry from '@sentry/react-native'
 import { registerBlocks } from './register-blocks'
 import { registerIcons } from './register-icons'
-import { AnalyticsProvider } from '@gauntlet/analytics'
-import { FirebaseTracker } from '@gauntlet/firebase'
+import { AnalyticsProviderV2 } from '@gauntlet/analytics'
+import { FirebaseTrackerV2 } from '@gauntlet/firebase'
 import { AppGiftProvider } from '@gauntlet/gift'
 import { AppGiftV2Provider } from '@gauntlet/discount'
 import { JudgemeReviewProvider } from '@gauntlet/judgeme'
 import {
   AppbrewCurrencyProvider,
-  AppbrewTracker,
+  AppbrewTrackerV2,
   LocalWishlistProvider,
 } from '@gauntlet/appbrew'
 import { Platform } from 'react-native'
-import { FacebookTracker } from '@gauntlet/facebook'
+import { FacebookTrackerV2 } from '@gauntlet/facebook'
 import { registerContainers } from './register-containers'
 import { FirebasePush } from '@gauntlet/firebase-push'
 import { ApptroveTracker } from '@app-brew/apptrove-sdk'
@@ -51,10 +51,10 @@ function initApp() {
       enableStallTracking: true,
       enableUserInteractionTracing: true,
     })
-    AnalyticsProvider.getInstance().addTracker(new FirebaseTracker())
-    AnalyticsProvider.getInstance().addTracker(new AppbrewTracker())
-    AnalyticsProvider.getInstance().addTracker(new FacebookTracker())
-    AnalyticsProvider.getInstance().addTracker(new ApptroveTracker())
+    AnalyticsProviderV2.getInstance().addTracker(new FirebaseTrackerV2())
+    AnalyticsProviderV2.getInstance().addTracker(new AppbrewTrackerV2())
+    AnalyticsProviderV2.getInstance().addTracker(new FacebookTrackerV2())
+    AnalyticsProviderV2.getInstance().addTracker(new ApptroveTracker())
 
   // }
   registerBlocks()
@@ -71,7 +71,7 @@ function initApp() {
   const modules = {}
   modules['auth'] = ShopifyAuthProvider.getInstance
   modules['catalog'] = ShopifyCatalogGeneric.getInstance
-  modules['analytics'] = AnalyticsProvider.getInstance
+  modules['analytics'] = AnalyticsProviderV2.getInstance
   modules['order'] = OrderDetailProvider.getInstance
   modules['wishlist'] = LocalWishlistProvider.getInstance
   modules['review'] = JudgemeReviewProvider.getInstance

@@ -31,6 +31,7 @@
     
 
     export class ApptroveTracker extends AnalyticsTrackerV2 {
+        protected override trackerName = 'ApptroveTracker'
 
         private userDetails = {
         email: "",
